@@ -1,0 +1,192 @@
+﻿#include "ui_hist_hdr.h"
+#include "ui_ui_hist_hdr.h"
+#include "opencv2/opencv.hpp"
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <QString>
+#include <QtConcurrent/QtConcurrent>
+
+
+using namespace cv;
+using namespace std;
+
+
+#define PRECISION (256)
+
+cv::Mat_<unsigned char> timg;
+float cdf[PRECISION], mincdf;
+int cnt=0;
+
+void getCDF(Mat input, float cdf[PRECISION], float &mincdf, float _anti_constrast)
+{
+    int rows = input.rows;
+    int cols = input.cols;
+    input.convertTo(input, CV_16UC1, (PRECISION - 1));
+
+    float pdf[PRECISION] = { 0 };
+    for (int ii = 0; ii < input.rows; ii++)
+        for (int jj = 0; jj < input.cols; jj++)
+        {
+            unsigned short b = input.at<unsigned short>(ii, jj);
+            pdf[b]++;
+        }
+
+    float clip_level = _anti_constrast;
+    float excess = 0.0;
+    float excess_avg = 0.0;
+
+    int non_zero_hist = PRECISION;
+    for (int k = 0; k < PRECISION; k++)
+    {
+        pdf[k] /= (input.rows * input.cols);
+        if (pdf[k] > clip_level) excess += (pdf[k] - clip_level);
+    }
+
+
+    excess_avg = excess / non_zero_hist;
+    for (int k = 0; k < PRECISION; k++)
+    {
+        if (pdf[k] > clip_level) pdf[k] = clip_level;
+        else if (pdf[k] > clip_level - excess_avg) {
+            excess -= clip_level - pdf[k];
+            pdf[k] = clip_level;
+        }
+        else{
+            excess -= excess_avg;
+            pdf[k] += excess_avg;
+        }
+    }
+    excess_avg = excess / non_zero_hist;
+
+    float min = 1.0;
+    for (int k = 0; k < PRECISION; k++)
+    {
+        pdf[k] += excess_avg;
+        if (min > pdf[k]) min = pdf[k];
+    }
+    mincdf = min;
+
+    cdf[0] = pdf[0];
+    for (int k = 1; k < PRECISION; k++)
+    {
+        cdf[k] = cdf[k - 1] + pdf[k];
+    }
+}
+
+float clahe2D(float brightness, float cdf[PRECISION], float mincdf)
+{
+    int b0 = (int)round(brightness * (PRECISION - 1));
+    float b1 = cdf[b0];
+
+    return (b1 - mincdf) / (1.0 - mincdf);
+}
+void send(Mat img,Mat_<unsigned char> dst)
+{
+    for (int i=0;i<img.rows;i++)
+    {
+        for (int j=0;j<img.cols;j++)
+        {
+            timg(i,j)=unsigned char(double(img.at<float>(i,j))/65535*255);
+        }
+    }
+//    img.convertTo(img, CV_8UC1, 255);
+//    dst = img * (1 - _contrast) + dst * _contrast;
+//    dst = timg * (1 - _contrast) + dst * _contrast;
+//    emit s_imagechar(outputimg);
+}
+Mat_<unsigned char> ui_hist_hdr::histogramTonemapping(Mat img, Mat_<unsigned char> &dst, float _contrast, float _anti_constrast)
+//void ui_hist_hdr::histogramTonemapping(Mat img, Mat_<unsigned char> & dst, float _contrast = 1.0f, float _anti_constrast = 0.01f)
+{
+    getCDF(img, cdf, mincdf, _anti_constrast);
+    for (int i = 0; i < img.rows; i++)
+        for (int j = 0; j < img.cols; j++)
+        {
+            float b = img.at<float>(i, j);
+            b = clahe2D(b, cdf, mincdf);
+            dst.at<uchar>(i, j) = (uchar)round(b * 255);
+        }
+    for (int i=0;i<img.rows;i++)
+    {
+        for (int j=0;j<img.cols;j++)
+        {
+            timg(i,j)=unsigned char(double(img.at<float>(i,j))/65535*255);
+        }
+    }
+    dst = timg * (1 - _contrast) + dst * _contrast;
+    emit s_imagechar(dst);
+    return dst;
+}
+
+
+ui_hist_hdr::ui_hist_hdr(QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::ui_hist_hdr)
+{
+    ui->setupUi(this);
+}
+
+ui_hist_hdr::~ui_hist_hdr()
+{
+    delete ui;
+}
+
+void ui_hist_hdr::r_imageshort(cv::Mat_<unsigned short> a)
+{
+    srcimg=a;
+    value=float(1)/400;
+    outputimg = Mat(srcimg.size(), CV_8UC1);
+    timg = Mat(srcimg.size(), CV_8UC1);
+    srcimg.convertTo(img, CV_32F);
+    double min, max;
+    minMaxLoc(img, &min, &max);
+    if (max - min > DBL_EPSILON) {
+        img = (img - min) / (max - min);
+    }
+    else
+    {
+       return;
+
+    }
+   QFuture<Mat_<unsigned char>> future = QtConcurrent::run(this,&ui_hist_hdr::histogramTonemapping,img, outputimg, 1, value);
+
+}
+void ui_hist_hdr::on_horizontalSlider_valueChanged(int position)
+{
+    while(cnt>=3){}
+    ui->shownum->setText(QString::number(position));
+    value=float(position)/ 400;
+//    histogramTonemapping(img, outputimg, 1, value);
+    QFuture<Mat_<unsigned char>> future = QtConcurrent::run(this,&ui_hist_hdr::histogramTonemapping,img, outputimg, 1, value);
+
+
+}
+void ui_hist_hdr::on_shownum_editingFinished()
+{
+    int position=ui->shownum->text().toInt();
+    position=position>0?position:1;
+    position=position<101?position:100;
+    ui->horizontalSlider->setValue(position);
+//    value=float(pow(2.0,position))/100;
+//    cv::Mat_<unsigned char> outputimg;
+//    histogramTonemapping(srcimg, outputimg, 1, value);
+
+}
+
+void ui_hist_hdr::on_ok_button_clicked()
+{
+
+}
+void ui_hist_hdr::closeEvent(QCloseEvent *)
+{
+    emit s_cancel();
+}
+
+void ui_hist_hdr::on_cancel_button_clicked()
+{
+    emit s_cancel();
+    this->close();
+}
+
+
+

@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/style">
+        <file alias="style">style-back.qss</file>
+    </qresource>
+    <qresource prefix="/image">
+        <file alias="icon">img/icon.png</file>
+    </qresource>
+</RCC>

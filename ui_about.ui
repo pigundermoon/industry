@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ui_about</class>
+ <widget class="QDialog" name="ui_about">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>310</width>
+    <height>130</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>331</width>
+     <height>141</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;工业探伤软件&lt;/p&gt;&lt;p&gt;基于 Qt 5.5.1 （MSVC 2013, 32 位）&lt;/p&gt;&lt;p&gt;于2016年五月四日创建&lt;/p&gt;&lt;p&gt;Copyright &lt;span style=&quot; font-family:'Calibri,sans-serif'; font-size:10.5pt;&quot;&gt;©&lt;/span&gt; 2016 PKU ICST. All rights reserved. &lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
