@@ -33,293 +33,83 @@
    <layout class="QGridLayout" name="gridLayout_5">
     <item row="0" column="1">
      <widget class="QWidget" name="widget_2" native="true">
-      <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0">
-        <widget class="QSplitter" name="splitter">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QWidget" name="widget" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>5</verstretch>
+          </sizepolicy>
          </property>
-         <widget class="QWidget" name="widget" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>5</verstretch>
-           </sizepolicy>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_2">
-           <item row="1" column="0">
-            <widget class="QWidget" name="widget_bottom" native="true">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <widget class="QScrollArea" name="scrollshowimg">
+            <property name="autoFillBackground">
+             <bool>false</bool>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="widgetResizable">
+             <bool>true</bool>
+            </property>
+            <widget class="QWidget" name="scrollAreaWidgetContents">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>880</width>
+               <height>333</height>
+              </rect>
              </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>58</height>
-              </size>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_3">
+             <layout class="QGridLayout" name="gridLayout">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
               <item row="0" column="0">
-               <widget class="QLabel" name="edit">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ffffff;&quot;&gt;放缩比例：&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="rate">
+               <widget class="QLabel" name="winshowimg">
                 <property name="enabled">
-                 <bool>false</bool>
+                 <bool>true</bool>
                 </property>
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>41</width>
-                  <height>21</height>
-                 </size>
-                </property>
-                <property name="autoFillBackground">
-                 <bool>false</bool>
+                <property name="layoutDirection">
+                 <enum>Qt::LeftToRight</enum>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 15pt &quot;Adobe Arabic&quot;;</string>
+                 <string notr="true"/>
                 </property>
                 <property name="text">
                  <string/>
                 </property>
-               </widget>
-              </item>
-              <item row="0" column="2">
-               <widget class="QLabel" name="label_3">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ffffff;&quot;&gt;%&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <property name="scaledContents">
+                 <bool>false</bool>
                 </property>
                </widget>
-              </item>
-              <item row="0" column="3">
-               <widget class="QWidget" name="widget_left_2" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <layout class="QHBoxLayout" name="horizontalLayout">
-                 <item>
-                  <widget class="QToolButton" name="minus">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>15</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>15</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">background-color: rgb(107, 107, 107);
-color:white;
-border:0px;</string>
-                   </property>
-                   <property name="text">
-                    <string>-</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QSlider" name="showimgscale">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimum">
-                    <number>1</number>
-                   </property>
-                   <property name="maximum">
-                    <number>1000</number>
-                   </property>
-                   <property name="value">
-                    <number>500</number>
-                   </property>
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QToolButton" name="plus">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>15</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>15</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">background-color: rgb(107, 107, 107);
-color:white;
-border:0px;</string>
-                   </property>
-                   <property name="text">
-                    <string>+</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item row="0" column="4">
-               <spacer name="horizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>461</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
               </item>
              </layout>
             </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QScrollArea" name="scrollshowimg">
-             <property name="autoFillBackground">
-              <bool>false</bool>
-             </property>
-             <property name="styleSheet">
-              <string notr="true"/>
-             </property>
-             <property name="widgetResizable">
-              <bool>true</bool>
-             </property>
-             <widget class="QWidget" name="scrollAreaWidgetContents">
-              <property name="geometry">
-               <rect>
-                <x>0</x>
-                <y>0</y>
-                <width>880</width>
-                <height>304</height>
-               </rect>
-              </property>
-              <layout class="QGridLayout" name="gridLayout">
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <item row="0" column="0">
-                <widget class="QLabel" name="winshowimg">
-                 <property name="enabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="layoutDirection">
-                  <enum>Qt::LeftToRight</enum>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true"/>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="scaledContents">
-                  <bool>false</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QTreeView" name="fileexplorer">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="sizeIncrement">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-         </widget>
+           </widget>
+          </item>
+         </layout>
         </widget>
+       </item>
+       <item>
+        <widget class="QTreeView" name="fileexplorer"/>
        </item>
       </layout>
      </widget>
@@ -449,6 +239,43 @@ border:0px;</string>
    <addaction name="menu_4"/>
    <addaction name="menu_5"/>
   </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="floatable">
+    <bool>true</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="cancel_tool"/>
+   <addaction name="separator"/>
+   <addaction name="resize_tool"/>
+   <addaction name="separator"/>
+   <addaction name="zoom_in"/>
+   <addaction name="zoom_out"/>
+   <addaction name="zoom"/>
+   <addaction name="separator"/>
+   <addaction name="contrast"/>
+   <addaction name="invert"/>
+   <addaction name="turn_horizontal"/>
+   <addaction name="turn_vertical"/>
+   <addaction name="rotate_tool"/>
+   <addaction name="separator"/>
+   <addaction name="text_tool"/>
+   <addaction name="arrow_tool"/>
+   <addaction name="coordinate"/>
+   <addaction name="length"/>
+   <addaction name="separator"/>
+   <addaction name="about"/>
+  </widget>
   <action name="openfile">
    <property name="text">
     <string>打开            </string>
@@ -482,8 +309,18 @@ border:0px;</string>
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/contrast_normal.png</normaloff>:/img/img/contrast_normal.png</iconset>
+   </property>
    <property name="text">
     <string>对比度           </string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::TextHeuristicRole</enum>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
    </property>
   </action>
   <action name="denoise">
@@ -498,8 +335,15 @@ border:0px;</string>
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/invert_normal.png</normaloff>:/img/img/invert_normal.png</iconset>
+   </property>
    <property name="text">
     <string>正负            </string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
    </property>
   </action>
   <action name="hist">
@@ -525,6 +369,9 @@ border:0px;</string>
    <property name="text">
     <string>局部适应</string>
    </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
   </action>
   <action name="hist_hdr">
    <property name="enabled">
@@ -534,29 +381,135 @@ border:0px;</string>
     <string>色调均化直方图</string>
    </property>
   </action>
-  <action name="actionB">
-   <property name="text">
-    <string>b</string>
-   </property>
-  </action>
   <action name="turn_horizontal">
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/horizontal_normal.png</normaloff>:/img/img/horizontal_normal.png</iconset>
+   </property>
    <property name="text">
     <string>水平翻转</string>
    </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="turn_vertical">
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/vertical_normal.png</normaloff>:/img/img/vertical_normal.png</iconset>
+   </property>
    <property name="text">
     <string>竖直翻转</string>
    </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="about">
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/help_normal.png</normaloff>:/img/img/help_normal.png</iconset>
+   </property>
    <property name="text">
     <string>关于本软件         </string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
    </property>
   </action>
   <action name="exit">
    <property name="text">
     <string>退出</string>
+   </property>
+  </action>
+  <action name="cancel_tool">
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/cancel_normal.png</normaloff>:/img/img/cancel_normal.png</iconset>
+   </property>
+   <property name="text">
+    <string>撤销</string>
+   </property>
+  </action>
+  <action name="resize_tool">
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/resize_normal.png</normaloff>:/img/img/resize_normal.png</iconset>
+   </property>
+   <property name="text">
+    <string>子窗口调整</string>
+   </property>
+  </action>
+  <action name="zoom_in">
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/zoomin_normal.png</normaloff>:/img/img/zoomin_normal.png</iconset>
+   </property>
+   <property name="text">
+    <string>放大</string>
+   </property>
+  </action>
+  <action name="zoom_out">
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/zoomout_normal.png</normaloff>:/img/img/zoomout_normal.png</iconset>
+   </property>
+   <property name="text">
+    <string>缩小</string>
+   </property>
+  </action>
+  <action name="zoom">
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/zoom_normal.png</normaloff>:/img/img/zoom_normal.png</iconset>
+   </property>
+   <property name="text">
+    <string>原始大小</string>
+   </property>
+  </action>
+  <action name="rotate_tool">
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/rotate_normal.png</normaloff>:/img/img/rotate_normal.png</iconset>
+   </property>
+   <property name="text">
+    <string>旋转</string>
+   </property>
+  </action>
+  <action name="text_tool">
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/text_normal.png</normaloff>:/img/img/text_normal.png</iconset>
+   </property>
+   <property name="text">
+    <string>文字标记</string>
+   </property>
+  </action>
+  <action name="arrow_tool">
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/arrow_normal.png</normaloff>:/img/img/arrow_normal.png</iconset>
+   </property>
+   <property name="text">
+    <string>箭头标记</string>
+   </property>
+  </action>
+  <action name="coordinate">
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/coordinate_normal.png</normaloff>:/img/img/coordinate_normal.png</iconset>
+   </property>
+   <property name="text">
+    <string>坐标信息</string>
+   </property>
+  </action>
+  <action name="length">
+   <property name="icon">
+    <iconset resource="src.qrc">
+     <normaloff>:/img/img/length_normal.png</normaloff>:/img/img/length_normal.png</iconset>
+   </property>
+   <property name="text">
+    <string>长度</string>
    </property>
   </action>
  </widget>

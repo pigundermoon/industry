@@ -89,14 +89,71 @@ void MainWindow::initialize()
     double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
     ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
 
+    for(int i = 0; i < ui->toolBar->actions().length(); i++){
+        ui->toolBar->widgetForAction(ui->toolBar->actions().at(i))->setObjectName(ui->toolBar->actions().at(i)->objectName());
+    }
+
+    QAction *ref = ui->toolBar->actions().at(3);
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+
+    //选择窗宽窗位模式
+    QComboBox *box = new QComboBox(ui->toolBar);
+    box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    box->setFixedWidth(110);
+
+    //TODO: 实现不同模式
+    box->addItem("Auto");
+    box->addItem("FullImage");
+    box->setCurrentIndex(-1);
+    ui->toolBar->insertWidget(ref, box);
+    //窗宽
+    QLabel *label = new QLabel(QString::fromLocal8Bit("窗宽"), ui->toolBar);
+    label->setStyleSheet("color: rgb(255, 255, 255);"
+                         "margin: 5px;"
+                         "border-bottom-width: 2px;");
+    ui->toolBar->insertWidget(ref, label);
+    //数值
+    QLineEdit *line = new QLineEdit(ui->toolBar);
+    line->setAlignment(Qt::AlignRight);
+    line->setValidator(new QIntValidator(1, 65535));
+    line->setFrame(false);
+    line->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    line->setFixedWidth(50);
+    ui->toolBar->insertWidget(ref, line);
+    //窗位
+    label = new QLabel(QString::fromLocal8Bit("窗位"), ui->toolBar);
+    label->setStyleSheet("color: rgb(255, 255, 255);"
+                         "margin: 5px;"
+                         "border-bottom-width: 2px;");
+
+    ui->toolBar->insertWidget(ref, label);
+    //数值
+    line = new QLineEdit(ui->toolBar);
+    line->setAlignment(Qt::AlignRight);
+    line->setValidator(new QIntValidator(1, 65535));
+    line->setFrame(false);
+    line->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    line->setFixedWidth(50);
+    ui->toolBar->insertWidget(ref, line);
+
+    //缩放比例
+    ref = ui->toolBar->actions().at(12);
+    pRate = new QLineEdit(ui->toolBar);
+    pRate->setAlignment(Qt::AlignRight);
+    pRate->setFrame(false);
+    pRate->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    pRate->setFixedWidth(50);
+    ui->toolBar->insertWidget(ref, pRate);
+    connect(pRate, SIGNAL(editingFinished()), this, SLOT(on_rate_editingFinished()));
+    disableaction();
 }
 
 //type=0，无变化，只平移，type=1，有变化，缩放/改变
 void MainWindow::show_image(cv::Mat_<unsigned short> s, int type)
 {
-    int height = ((double)ui->showimgscale->value())/1000*s.rows;
-    int width = ((double)ui->showimgscale->value())/1000*s.cols;
-    double rate = ((double)ui->showimgscale->value())/1000;
+    int height = ((double)curScale)/100*s.rows;
+    int width = ((double)curScale)/100*s.cols;
+    double rate = ((double)curScale)/100;
     if (type==1)
     {
         for (int i=0;i<srcimgshort.rows;i++)
@@ -183,8 +240,8 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
                 QPoint temp = ev->globalPos();
                 int xvalue = temp.x()-scrollpos.x();
                 int yvalue = temp.y()-scrollpos.y();
-                w_center -= ((double)xvalue)/((double)ui->showimgscale->value())/2;
-                h_center -= ((double)yvalue)/((double)ui->showimgscale->value())/2;
+                w_center -= ((double)xvalue)/((double)curScale*10)/2;
+                h_center -= ((double)yvalue)/((double)curScale*10)/2;
                 if (w_center>0.99) w_center=0.99;
                 if (w_center<0.01) w_center=0.01;
                 if (h_center>0.99) h_center=0.99;
@@ -244,11 +301,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
         {
             QWheelEvent* ev = static_cast<QWheelEvent*>(e);
             int num=ev->delta()/10;
-            int min=ui->showimgscale->minimum();
-            int max=ui->showimgscale->maximum();
-            if (ui->showimgscale->value()+num<min) ui->showimgscale->setValue(min);
-            else if (ui->showimgscale->value()+num>max) ui->showimgscale->setValue(max);
-            else ui->showimgscale->setValue(ui->showimgscale->value()+num);
+            setCurScale(curScale + num);
             return true;
         }
 
@@ -261,8 +314,11 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
 void MainWindow::enableaction()
 {
     ui->hist->setEnabled(true);
-    ui->rate->setEnabled(true);
-    ui->showimgscale->setEnabled(true);
+    ui->zoom->setEnabled(true);
+    ui->zoom_in->setEnabled(true);
+    ui->zoom_out->setEnabled(true);
+    ui->turn_horizontal->setEnabled(true);
+    ui->turn_vertical->setEnabled(true);
     ui->invert->setEnabled(true);
     ui->back->setEnabled(true);
     ui->hdr->setEnabled(true);
@@ -273,14 +329,16 @@ void MainWindow::enableaction()
     ui->turn->setEnabled(true);
     ui->contrast->setEnabled(true);
     ui->denoise->setEnabled(true);
-    ui->plus->setEnabled(true);
-    ui->minus->setEnabled(true);
+    pRate->setEnabled(true);
 }
 void MainWindow::disableaction()
 {
     ui->hist->setEnabled(false);
-    ui->rate->setEnabled(false);
-    ui->showimgscale->setEnabled(false);
+    ui->zoom->setEnabled(false);
+    ui->zoom_in->setEnabled(false);
+    ui->zoom_out->setEnabled(false);
+    ui->turn_horizontal->setEnabled(false);
+    ui->turn_vertical->setEnabled(false);
     ui->invert->setEnabled(false);
     ui->back->setEnabled(false);
     ui->hdr->setEnabled(false);
@@ -291,8 +349,7 @@ void MainWindow::disableaction()
     ui->turn->setEnabled(false);
     ui->contrast->setEnabled(false);
     ui->denoise->setEnabled(false);
-    ui->plus->setEnabled(false);
-    ui->plus->setEnabled(false);
+    pRate->setEnabled(false);
 }
 
 void MainWindow::reset()
@@ -310,7 +367,7 @@ void MainWindow::reset()
 void MainWindow::settext(QString arg)
 {
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
-    ui->rate->setText(arg);
+    pRate->setText(arg);
 }
 //另存文件
 void MainWindow::on_resave_triggered()
@@ -484,23 +541,24 @@ void MainWindow::openfile(QString filename, int type)
         double hrate=double(winh)/oh;
 
         double rate=min(wrate,hrate);
-        settext(QString::number(rate*100,'f',1));
+        settext(QString::number((int)(rate*100)));
 
         if(rate>1)
         {
-            sliderpos=1000;
-            slidermin=500;
-            slidermax=4000;
+            sliderpos=100;
+            slidermin=50;
+            slidermax=400;
         }
         else
         {
-            sliderpos=1000*rate;
+            sliderpos=100*rate;
             slidermin=0.5*sliderpos;
-            slidermax=2000;
+            slidermax=200;
         }
-        ui->showimgscale->setMaximum(slidermax);
-        ui->showimgscale->setMinimum( slidermin);
-        ui->showimgscale->setValue(sliderpos);
+        maxScale = slidermax;
+        minScale = slidermin;
+        curScale = sliderpos;
+        pRate->setValidator(new QIntValidator(slidermin, slidermax));
 
         h_center=0.5;
         w_center=0.5;
@@ -542,44 +600,40 @@ void MainWindow::on_openfile_triggered()
 
 }
 
+void MainWindow::setCurScale(int scale){
+    scale = scale>minScale?scale:minScale;
+    scale = scale<maxScale?scale:maxScale;
+    if(curScale != scale){
+        curScale = scale;
+        settext(QString::number(curScale));
+        double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
+        ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
+        cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
+        levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
+        show_image(timg,1);
+    }
+}
+
 //更改放缩大小文本框
 void MainWindow::on_rate_editingFinished()
 {
-    int position=ui->rate->text().toFloat()*10;
-    if (position==ui->showimgscale->value()) return;
-    int min=ui->showimgscale->minimum();
-    int max=ui->showimgscale->maximum();
-    position = position>min?position:min;
-    position = position<max?position:max;
-    ui->showimgscale->setValue(position);
-}
-//放缩大小滑块
-void MainWindow::on_showimgscale_valueChanged(int value)
-{
-
-    settext(QString::number(float(value)/10,'f',1));
-    double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
-    ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
-    cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-    levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
-    show_image(timg,1);
+    int position=pRate->text().toInt();
+    if (position==curScale) return;
+    setCurScale(position);
 }
 
-void MainWindow::on_minus_clicked()
-{
-    int min=ui->showimgscale->minimum();
-    int max=ui->showimgscale->maximum();
-    if (ui->showimgscale->value()-1>=min&&ui->showimgscale->value()-1<=max)
-        ui->showimgscale->setValue(ui->showimgscale->value()-1);
-}
+////放缩大小滑块
+//void MainWindow::on_showimgscale_valueChanged(int value)
+//{
 
-void MainWindow::on_plus_clicked()
-{
-    int min=ui->showimgscale->minimum();
-    int max=ui->showimgscale->maximum();
-    if (ui->showimgscale->value()+1>=min&&ui->showimgscale->value()+1<=max)
-        ui->showimgscale->setValue(ui->showimgscale->value()+1);
-}
+//    settext(QString::number(float(value)/10,'f',1));
+//    double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
+//    ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
+//    cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
+//    levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
+//    show_image(timg,1);
+//}
+
 
 //触发调整色阶按钮
 void MainWindow::on_hist_triggered()
@@ -849,9 +903,9 @@ void MainWindow::on_turn_vertical_triggered()
 void MainWindow::r_imagechar(cv::Mat_<unsigned char> img)
 {
 
-    int height = ((double)ui->showimgscale->value())/1000*img.rows;
-    int width = ((double)ui->showimgscale->value())/1000*img.cols;
-    double rate = ((double)ui->showimgscale->value())/1000;
+    int height = ((double)curScale)/100*img.rows;
+    int width = ((double)curScale)/100*img.cols;
+    double rate = ((double)curScale)/100;
     if(!cvtsrcimgchar.empty()) cvtsrcimgchar.release();
     cv::Mat tmp;
     cv::resize(img,tmp,cv::Size(width,height),rate,rate,CV_INTER_AREA);
@@ -897,13 +951,20 @@ void MainWindow::r_imagechar(cv::Mat_<unsigned char> img)
 
     ui->winshowimg->setPixmap(QPixmap::fromImage(showimg));
 }
+void MainWindow::r_ratetext(QString s){
+    int value = s.toInt();
+    curScale = value;
+    tshowimg=showimg.scaled(ow*value/100,oh*value/100,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+    ui->winshowimg->setPixmap(QPixmap::fromImage(tshowimg));
+    ui->winshowimg->setAlignment(Qt::AlignVCenter|Qt::AlignHCenter);
+}
 void MainWindow::r_lhdr_dst(cv::Mat a)
 {
     cv::Mat_<unsigned char> img;
     a.convertTo(img, CV_8UC1, 255);
-    int height = ((double)ui->showimgscale->value())/1000*img.rows;
-    int width = ((double)ui->showimgscale->value())/1000*img.cols;
-    double rate = ((double)ui->showimgscale->value())/1000;
+    int height = ((double)curScale)/100*img.rows;
+    int width = ((double)curScale)/100*img.cols;
+    double rate = ((double)curScale)/100;
     if(!cvtsrcimgchar.empty()) cvtsrcimgchar.release();
     cv::Mat tmp;
     cv::resize(img,tmp,cv::Size(width,height),rate,rate,CV_INTER_AREA);
@@ -1019,5 +1080,19 @@ void MainWindow::on_exit_triggered()
 }
 
 
+void MainWindow::on_zoom_out_triggered()
+{
+    if (curScale-1>=minScale && curScale-1<=maxScale)
+        setCurScale(curScale - 1);
+}
 
+void MainWindow::on_zoom_in_triggered()
+{
+    if (curScale + 1 >= minScale && curScale + 1 <= maxScale)
+        setCurScale(curScale + 1);
+}
 
+void MainWindow::on_zoom_triggered()
+{
+    setCurScale(100);
+}

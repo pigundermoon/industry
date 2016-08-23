@@ -14,5 +14,50 @@
         <file>img/up_arrow_disabled.png</file>
         <file>img/minus.png</file>
         <file>img/plus.png</file>
+        <file>img/arrow_down.png</file>
+        <file>img/arrow_hover.png</file>
+        <file>img/arrow_normal.png</file>
+        <file>img/cancel_down.png</file>
+        <file>img/cancel_hover.png</file>
+        <file>img/cancel_normal.png</file>
+        <file>img/contrast_down.png</file>
+        <file>img/contrast_hover.png</file>
+        <file>img/contrast_normal.png</file>
+        <file>img/coordinate_down.png</file>
+        <file>img/coordinate_hover.png</file>
+        <file>img/coordinate_normal.png</file>
+        <file>img/help_down.png</file>
+        <file>img/help_hover.png</file>
+        <file>img/help_normal.png</file>
+        <file>img/horizontal_down.png</file>
+        <file>img/horizontal_hover.png</file>
+        <file>img/horizontal_normal.png</file>
+        <file>img/invert_down.png</file>
+        <file>img/invert_hover.png</file>
+        <file>img/invert_normal.png</file>
+        <file>img/length_down.png</file>
+        <file>img/length_hover.png</file>
+        <file>img/length_normal.png</file>
+        <file>img/resize_down.png</file>
+        <file>img/resize_hover.png</file>
+        <file>img/resize_normal.png</file>
+        <file>img/rotate_down.png</file>
+        <file>img/rotate_hover.png</file>
+        <file>img/rotate_normal.png</file>
+        <file>img/text_down.png</file>
+        <file>img/text_hover.png</file>
+        <file>img/text_normal.png</file>
+        <file>img/vertical_down.png</file>
+        <file>img/vertical_hover.png</file>
+        <file>img/vertical_normal.png</file>
+        <file>img/zoom_down.png</file>
+        <file>img/zoom_hover.png</file>
+        <file>img/zoom_normal.png</file>
+        <file>img/zoomin_down.png</file>
+        <file>img/zoomin_hover.png</file>
+        <file>img/zoomin_normal.png</file>
+        <file>img/zoomout_down.png</file>
+        <file>img/zoomout_hover.png</file>
+        <file>img/zoomout_normal.png</file>
     </qresource>
 </RCC>
