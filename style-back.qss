@@ -247,3 +247,113 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical
 {
     background: none;
 }
+
+QToolBar
+{
+    background:rgb(85, 85, 85);
+    border-top: 1px solid rgb(55, 55, 55);
+    border-bottom: 1px solid rgb(55, 55, 55);
+}
+
+QToolBar::separator
+{
+    background-color:rgb(55, 55, 55);
+    width:1;
+    margin-top:2;
+    margin-bottom:2;
+    margin-left:5;
+    margin-right:5
+}
+
+QToolButton#cancel_tool {border-image: url(:/img/img/cancel_normal.png);}
+QToolButton#cancel_tool:hover:!pressed {border-image: url(:/img/img/cancel_hover.png);}
+QToolButton#cancel_tool:hover:pressed {border-image: url(:/img/img/cancel_down.png);}
+
+QToolButton#resize_tool {border-image: url(:/img/img/resize_normal.png);}
+QToolButton#resize_tool:hover:!pressed {border-image: url(:/img/img/resize_hover.png);}
+QToolButton#resize_tool:hover:pressed {border-image: url(:/img/img/resize_down.png);}
+
+QToolButton#zoom_in {border-image: url(:/img/img/zoomin_normal.png);}
+QToolButton#zoom_in:hover:!pressed {border-image: url(:/img/img/zoomin_hover.png);}
+QToolButton#zoom_in:hover:pressed {border-image: url(:/img/img/zoomin_down.png);}
+
+QToolButton#zoom_out {border-image: url(:/img/img/zoomout_normal.png);}
+QToolButton#zoom_out:hover:!pressed {border-image: url(:/img/img/zoomout_hover.png);}
+QToolButton#zoom_out:hover:pressed {border-image: url(:/img/img/zoomout_down.png);}
+
+QToolButton#zoom {border-image: url(:/img/img/zoom_normal.png);}
+QToolButton#zoom:hover:!pressed {border-image: url(:/img/img/zoom_hover.png);}
+QToolButton#zoom:hover:pressed {border-image: url(:/img/img/zoom_down.png);}
+
+QToolButton#contrast {border-image: url(:/img/img/contrast_normal.png);}
+QToolButton#contrast:hover:!pressed {border-image: url(:/img/img/contrast_hover.png);}
+QToolButton#contrast:hover:pressed {border-image: url(:/img/img/contrast_down.png);}
+
+QToolButton#invert {border-image: url(:/img/img/invert_normal.png);}
+QToolButton#invert:hover:!pressed {border-image: url(:/img/img/invert_hover.png);}
+QToolButton#invert:hover:pressed {border-image: url(:/img/img/invert_down.png);}
+
+QToolButton#turn_horizontal {border-image: url(:/img/img/horizontal_normal.png);}
+QToolButton#turn_horizontal:hover:!pressed {border-image: url(:/img/img/horizontal_hover.png);}
+QToolButton#turn_horizontal:hover:pressed {border-image: url(:/img/img/horizontal_down.png);}
+
+QToolButton#turn_vertical {border-image: url(:/img/img/vertical_normal.png);}
+QToolButton#turn_vertical:hover:!pressed {border-image: url(:/img/img/vertical_hover.png);}
+QToolButton#turn_vertical:hover:pressed {border-image: url(:/img/img/vertical_down.png);}
+
+QToolButton#rotate_tool {border-image: url(:/img/img/rotate_normal.png);}
+QToolButton#rotate_tool:hover:!pressed {border-image: url(:/img/img/rotate_hover.png);}
+QToolButton#rotate_tool:hover:pressed {border-image: url(:/img/img/rotate_down.png);}
+
+QToolButton#text_tool {border-image: url(:/img/img/text_normal.png);}
+QToolButton#text_tool:hover:!pressed {border-image: url(:/img/img/text_hover.png);}
+QToolButton#text_tool:hover:pressed {border-image: url(:/img/img/text_down.png);}
+
+QToolButton#arrow_tool {border-image: url(:/img/img/arrow_normal.png);}
+QToolButton#arrow_tool:hover:!pressed {border-image: url(:/img/img/arrow_hover.png);}
+QToolButton#arrow_tool:hover:pressed {border-image: url(:/img/img/arrow_down.png);}
+
+QToolButton#coordinate {border-image: url(:/img/img/coordinate_normal.png);}
+QToolButton#coordinate:hover:!pressed {border-image: url(:/img/img/coordinate_hover.png);}
+QToolButton#coordinate:hover:pressed {border-image: url(:/img/img/coordinate_down.png);}
+
+QToolButton#length {border-image: url(:/img/img/length_normal.png);}
+QToolButton#length:hover:!pressed {border-image: url(:/img/img/length_hover.png);}
+QToolButton#length:hover:pressed {border-image: url(:/img/img/length_down.png);}
+
+QToolButton#about {border-image: url(:/img/img/help_normal.png);}
+QToolButton#about:hover:!pressed {border-image: url(:/img/img/help_hover.png);}
+QToolButton#about:hover:pressed {border-image: url(:/img/img/help_down.png);}
+
+QLineEdit
+{
+    color: rgb(255, 255, 255);
+    background-color: rgb(55, 55, 55);
+    margin: 4px;
+}
+
+QComboBox {
+    border: 0px solid;
+    color: rgb(255, 255, 255);
+    background: rgb(55, 55, 55);
+    margin-top: 4px;
+    margin-bottom: 4px;
+    padding-left:2px;
+}
+
+QComboBox::drop-down
+{
+    border-width: 0px;
+}
+
+QComboBox::down-arrow
+{
+}
+
+QComboBox QAbstractItemView
+{
+    border-radius: 0px;
+    outline: 0;
+    background-color: lightgray;
+    selection-background-color: darkgray;
+}

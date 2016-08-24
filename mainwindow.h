@@ -19,7 +19,13 @@
 #include "qscrollbar.h"
 #include "QWheelEvent"
 #include "QPainter"
+<<<<<<< HEAD
 #include "recdcmtkfile.h"
+=======
+#include "QLineEdit"
+#include "QComboBox"
+#include "QMessageBox"
+>>>>>>> 73cf0cca325056a65d6a15f7b93ba76eb41155ba
 
 
 
@@ -34,6 +40,7 @@ class MainWindow : public QMainWindow
 
 public:
     void settext(QString arg);
+    void setCurScale(int scale);
     explicit MainWindow(QWidget *parent = 0);
     void initialize();
     ~MainWindow();
@@ -52,11 +59,11 @@ private slots:
 
     void r_lhdr_dst(cv::Mat a);
 
+    void r_ratetext(QString s);
+
     void on_openfile_triggered();
 
     void on_hist_triggered();
-
-    void on_rate_editingFinished();
 
     void on_invert_triggered();
 
@@ -70,8 +77,6 @@ private slots:
 
     void on_info_triggered();
 
-    void on_showimgscale_valueChanged(int value);
-
     void on_turn_horizontal_triggered();
 
     void on_turn_vertical_triggered();
@@ -82,15 +87,19 @@ private slots:
 
     void on_about_triggered();
 
+    void on_zoom_in_triggered();
 
+    void on_zoom_out_triggered();
 
     void on_exit_triggered();
 
-    void on_minus_clicked();
-
-    void on_plus_clicked();
-
     void on_imagelist_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+
+    void on_rate_editingFinished();
+
+
+
+    void on_zoom_triggered();
 
 
 signals:
@@ -141,6 +150,13 @@ private:
     float h_center;
     float w_center;
 
+<<<<<<< HEAD
+=======
+    int curScale;
+    int maxScale;
+    int minScale;
+    QLineEdit *pRate;
+>>>>>>> 73cf0cca325056a65d6a15f7b93ba76eb41155ba
 
 protected:
     bool eventFilter(QObject *target, QEvent *e);
