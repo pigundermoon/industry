@@ -1,10 +1,13 @@
-﻿#ifndef UI_IMAGEINFO_H
+﻿
+
+#ifndef UI_IMAGEINFO_H
 #define UI_IMAGEINFO_H
 
 #include <QDialog>
 #include "opencv.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
+#include "recdcmtkfile.h"
 
 namespace Ui {
 class ui_imageinfo;
@@ -18,7 +21,7 @@ public:
     explicit ui_imageinfo(QWidget *parent = 0);
     ~ui_imageinfo();
 private slots:
-    void r_imageshort(cv::Mat_<unsigned short> a);
+    void r_imageinfo(recdcmtkfile* file);
 private:
     Ui::ui_imageinfo *ui;
 };

@@ -1,4 +1,4 @@
-﻿//#include "dcmtkfile.h"
+﻿#include "dcmtkfile.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "QTextCodec"
@@ -49,9 +49,10 @@ extern void levelAdjustment(Mat_<unsigned short>  input, Mat_<unsigned short> & 
 
 
 
-static QString filename;
+static QString recfilename;
 static vector<QString> filelist;
 static int ptr;
+static dcmtkfile* dcmFile;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -69,6 +70,8 @@ MainWindow::~MainWindow()
 }
 void MainWindow::initialize()
 {
+    dcmFile = new dcmtkfile();
+
     label_loc[0]=QString("[L]");
     label_loc[1]=QString("[H]");
     label_loc[2]=QString("[R]");
@@ -451,6 +454,7 @@ void MainWindow::on_resave_triggered()
 
 void MainWindow::on_imagelist_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
 {
+    if (current == previous) return;
     int num=current->text().toInt()-1;
     QString filename=filelist[num];
     openfile(filename,2);
@@ -458,7 +462,6 @@ void MainWindow::on_imagelist_currentItemChanged(QListWidgetItem *current, QList
 //type=1,列表第一个，打开并显示，type=0，只在列表里显示，type=2，列表切换显示大图
 void MainWindow::openfile(QString filename, int type)
 {
-    typedef vector<QString> vq;
     if (type!=2)
     {
         for ( vector<QString>::iterator it = filelist.begin();it<filelist.end();it++)
@@ -474,42 +477,51 @@ void MainWindow::openfile(QString filename, int type)
 
     cv::Mat_<unsigned short> srcimgshort_temp;
     TIFF* tif = TIFFOpen(code->fromUnicode(filename).data(), "r");
-        if (tif) {
-            uint32 w, h;
-            tdata_t buf;
-            uint32 row;
-            uint32 config;
+    if (tif)
+    {
+        uint32 w, h;
+        tdata_t buf;
+        uint32 row;
+        uint32 config;
 
-            TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
-            TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
-            srcimgshort_temp=cv::Mat(h,w,CV_16UC1);
-            TIFFGetField(tif, TIFFTAG_PLANARCONFIG, &config);
+        TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
+        TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
+        srcimgshort_temp=cv::Mat(h,w,CV_16UC1);
+        TIFFGetField(tif, TIFFTAG_PLANARCONFIG, &config);
 //            tsize_t aa=TIFFScanlineSize(tif);
-            buf = _TIFFmalloc(TIFFScanlineSize(tif));
+        buf = _TIFFmalloc(TIFFScanlineSize(tif));
 
 
 
-            uint16  nsamples;
-            uint16* data;
-            TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &nsamples);
+        uint16  nsamples;
+        uint16* data;
+        TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &nsamples);
 
-                for (row = 0; row < h; row++)
+            for (row = 0; row < h; row++)
+            {
+                TIFFReadScanline(tif, buf, row, 0);
+                data = (uint16*)buf;
+                for (uint32 j=0;j < w;j++)
                 {
-                    TIFFReadScanline(tif, buf, row, 0);
-                    data = (uint16*)buf;
-                    for (uint32 j=0;j < w;j++)
-                    {
-                        srcimgshort_temp(row,j)=65535-data[j];
-                    }
-
-                    //printArray(data, imagelength);
+                    srcimgshort_temp(row,j)=65535-data[j];
                 }
-                // printArray(data,imagelength,height);
+
+                //printArray(data, imagelength);
+            }
+            // printArray(data,imagelength,height);
 
 
-            _TIFFfree(buf);
-            TIFFClose(tif);
-        }
+        _TIFFfree(buf);
+        TIFFClose(tif);
+    }
+    else
+    {
+       if (!dcmFile->checkfile(filename)) return;
+       srcimgshort_temp = dcmFile->loadfile(filename);
+    }
+
+    recfilename = filename;
+
     enableaction();
     if (srcimgshort_temp.rows>srcimgshort_temp.cols)
     {
@@ -608,10 +620,9 @@ void MainWindow::openfile(QString filename, int type)
 //打开文件
 void MainWindow::on_openfile_triggered()
 {
-//    dcmtkfile* tfile = new dcmtkfile("D:\\lab\\project1\\工业探伤-深圳\\41034373T\\DICOMDAT\\SDY00000\\SRS00000\\IMG00000");
 
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
-    QStringList filelist = QFileDialog::getOpenFileNames(this,QString::fromLocal8Bit("打开"),"","Images (*.tif *.tiff)");
+    QStringList filelist = QFileDialog::getOpenFileNames(this,QString::fromLocal8Bit("打开"),"","Images (*.tif *.tiff);;(*.*)");
      for(QStringList::Iterator it=filelist.begin();it!=filelist.end();it++)
     {
         if (it==filelist.begin())
@@ -619,7 +630,6 @@ void MainWindow::on_openfile_triggered()
         else
             openfile(*it,0);
     }
-
 }
 
 void MainWindow::setCurScale(int scale){
@@ -815,15 +825,31 @@ void MainWindow::on_denoise_triggered()
 void MainWindow::on_info_triggered()
 {
     if (srcimgshort.empty()) return;
+
+    recdcmtkfile* recdfile = new recdcmtkfile();
+    recdfile->height=srcimgshort.rows;
+    recdfile->width=srcimgshort.cols;
+    recdfile->flag=false;
+
+    dcmtkfile* tmpdfile = new dcmtkfile();
+    if (tmpdfile->checkfile(recfilename))
+    {
+        recdfile->flag=true;
+        recdfile->date=QString::fromLocal8Bit(tmpdfile->date.data());
+        recdfile->time=QString::fromLocal8Bit(tmpdfile->time.data());
+        recdfile->id=QString::fromLocal8Bit(tmpdfile->id.data());
+        recdfile->name=QString::fromLocal8Bit(tmpdfile->name.data());
+    }
+
     w4=new ui_imageinfo();
-    QObject::connect(this,SIGNAL(s_imageshort(cv::Mat_<unsigned short>)),w4,SLOT(r_imageshort(cv::Mat_<unsigned short>)));
-    emit s_imageshort(srcimgshort);
+    QObject::connect(this,SIGNAL(s_imageinfo(recdcmtkfile*)),w4,SLOT(r_imageinfo(recdcmtkfile*)));
+    emit s_imageinfo(recdfile);
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
     w4->setWindowTitle(QString::fromLocal8Bit("文件信息"));
     w4->setWindowFlags(Qt::WindowCloseButtonHint);
-    w4->setGeometry(x()+100,y()+100,220,80);
-    w4->setFixedWidth(220);
-    w4->setFixedHeight(80);
+    w4->setGeometry(x()+100,y()+100,200,273);
+    w4->setFixedWidth(200);
+    w4->setFixedHeight(273);
     w4->exec();
 }
 //关于
@@ -1101,7 +1127,6 @@ void MainWindow::on_exit_triggered()
     this->close();
 }
 
-
 void MainWindow::on_zoom_out_triggered()
 {
     if (curScale-1>=minScale && curScale-1<=maxScale)
@@ -1118,3 +1143,4 @@ void MainWindow::on_zoom_triggered()
 {
     setCurScale(100);
 }
+

@@ -15,8 +15,15 @@ ui_imageinfo::~ui_imageinfo()
     delete ui;
 }
 
-void ui_imageinfo::r_imageshort(cv::Mat_<unsigned short> a)
+void ui_imageinfo::r_imageinfo(recdcmtkfile *file)
 {
-    ui->width->setText(QString::number(a.cols));
-    ui->height->setText(QString::number(a.rows));
+    ui->width->setText(QString::number(file->width));
+    ui->height->setText(QString::number(file->height));
+    if (file->flag)
+    {
+        ui->name->setText(file->name);
+        ui->id->setText(file->id);
+        ui->date->setText(file->date);
+        ui->time->setText(file->time);
+    }
 }

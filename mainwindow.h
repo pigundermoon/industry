@@ -1,7 +1,6 @@
 ﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-
 #include <QMainWindow>
 #include "c_gradation.h"
 #include "opencv.hpp"
@@ -20,10 +19,12 @@
 #include "qscrollbar.h"
 #include "QWheelEvent"
 #include "QPainter"
+#include "recdcmtkfile.h"
 #include "QLineEdit"
 #include "QComboBox"
 #include "QMessageBox"
 #include "QFileSystemModel"
+
 
 
 
@@ -99,10 +100,12 @@ private slots:
 
     void on_zoom_triggered();
 
+
 signals:
     void s_imageshort(cv::Mat_<unsigned short>);
     void s_hist(cv::Mat_<unsigned char>);
     void s_number(int);
+    void s_imageinfo(recdcmtkfile* file);
 
 private:
     Ui::MainWindow *ui;
