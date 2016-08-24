@@ -23,6 +23,7 @@
 #include "QLineEdit"
 #include "QComboBox"
 #include "QMessageBox"
+#include "QFileSystemModel"
 
 
 

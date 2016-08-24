@@ -81,6 +81,7 @@ void MainWindow::initialize()
     ui->imagelist->setSpacing(0);
     ptr=0;
 
+    ui->toolBar->setIconSize(QSize(30, 30));
 
     ui->scrollshowimg->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->scrollshowimg->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -95,12 +96,16 @@ void MainWindow::initialize()
 
     QAction *ref = ui->toolBar->actions().at(3);
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+    QFont font;
+    font.setFamily("Microsoft YaHei");
+    font.setPointSize(11);
+    font.setWeight(QFont::Normal);
 
     //选择窗宽窗位模式
     QComboBox *box = new QComboBox(ui->toolBar);
     box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    box->setFixedWidth(110);
-
+    box->setFixedWidth(140);
+    box->setFont(font);
     //TODO: 实现不同模式
     box->addItem("Auto");
     box->addItem("FullImage");
@@ -111,6 +116,7 @@ void MainWindow::initialize()
     label->setStyleSheet("color: rgb(255, 255, 255);"
                          "margin: 5px;"
                          "border-bottom-width: 2px;");
+    label->setFont(font);
     ui->toolBar->insertWidget(ref, label);
     //数值
     QLineEdit *line = new QLineEdit(ui->toolBar);
@@ -118,14 +124,15 @@ void MainWindow::initialize()
     line->setValidator(new QIntValidator(1, 65535));
     line->setFrame(false);
     line->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    line->setFixedWidth(50);
+    line->setFixedWidth(70);
+    line->setFont(font);
     ui->toolBar->insertWidget(ref, line);
     //窗位
     label = new QLabel(QString::fromLocal8Bit("窗位"), ui->toolBar);
     label->setStyleSheet("color: rgb(255, 255, 255);"
                          "margin: 5px;"
                          "border-bottom-width: 2px;");
-
+    label->setFont(font);
     ui->toolBar->insertWidget(ref, label);
     //数值
     line = new QLineEdit(ui->toolBar);
@@ -133,7 +140,8 @@ void MainWindow::initialize()
     line->setValidator(new QIntValidator(1, 65535));
     line->setFrame(false);
     line->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    line->setFixedWidth(50);
+    line->setFixedWidth(70);
+    line->setFont(font);
     ui->toolBar->insertWidget(ref, line);
 
     //缩放比例
@@ -143,9 +151,23 @@ void MainWindow::initialize()
     pRate->setFrame(false);
     pRate->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     pRate->setFixedWidth(50);
+    pRate->setFont(font);
     ui->toolBar->insertWidget(ref, pRate);
     connect(pRate, SIGNAL(editingFinished()), this, SLOT(on_rate_editingFinished()));
     disableaction();
+    //百分号
+    label = new QLabel("%", ui->toolBar);
+    label->setStyleSheet("color: rgb(255, 255, 255);"
+                         "margin-top:5px;"
+                         "margin-bottom:5px;"
+                         "margin-right:5px;"
+                         "border-bottom-width: 2px;");
+    label->setFont(font);
+    ui->toolBar->insertWidget(ref, label);
+
+    QDirModel *model = new QDirModel;
+    ui->fileexplorer->setModel(model);
+    ui->fileexplorer->setRootIndex(model->index(""));
 }
 
 //type=0，无变化，只平移，type=1，有变化，缩放/改变
