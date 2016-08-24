@@ -82,7 +82,7 @@ HEADERS  += dcmtkfile.h \
     recdcmtkfile.h
 
 
-FORMS    += mainwindow.ui \
+FORMS    += \
             c_gradation.ui \
     ui_hist_hdr.ui \
     ui_local_hdr.ui \
@@ -90,7 +90,8 @@ FORMS    += mainwindow.ui \
     ui_contrast.ui \
     ui_denoise.ui \
     ui_about.ui \
-    processing.ui
+    processing.ui \
+    mainwindow.ui
 
 RESOURCES += \
     src.qrc

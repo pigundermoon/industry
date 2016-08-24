@@ -19,13 +19,11 @@
 #include "qscrollbar.h"
 #include "QWheelEvent"
 #include "QPainter"
-<<<<<<< HEAD
 #include "recdcmtkfile.h"
-=======
 #include "QLineEdit"
 #include "QComboBox"
 #include "QMessageBox"
->>>>>>> 73cf0cca325056a65d6a15f7b93ba76eb41155ba
+
 
 
 
@@ -150,13 +148,10 @@ private:
     float h_center;
     float w_center;
 
-<<<<<<< HEAD
-=======
     int curScale;
     int maxScale;
     int minScale;
     QLineEdit *pRate;
->>>>>>> 73cf0cca325056a65d6a15f7b93ba76eb41155ba
 
 protected:
     bool eventFilter(QObject *target, QEvent *e);

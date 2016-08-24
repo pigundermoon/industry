@@ -610,9 +610,6 @@ void MainWindow::on_openfile_triggered()
     }
 }
 
-<<<<<<< HEAD
-
-=======
 void MainWindow::setCurScale(int scale){
     scale = scale>minScale?scale:minScale;
     scale = scale<maxScale?scale:maxScale;
@@ -626,7 +623,6 @@ void MainWindow::setCurScale(int scale){
         show_image(timg,1);
     }
 }
->>>>>>> 73cf0cca325056a65d6a15f7b93ba76eb41155ba
 
 //更改放缩大小文本框
 void MainWindow::on_rate_editingFinished()
@@ -1109,9 +1105,6 @@ void MainWindow::on_exit_triggered()
     this->close();
 }
 
-<<<<<<< HEAD
-=======
-
 void MainWindow::on_zoom_out_triggered()
 {
     if (curScale-1>=minScale && curScale-1<=maxScale)
@@ -1128,4 +1121,4 @@ void MainWindow::on_zoom_triggered()
 {
     setCurScale(100);
 }
->>>>>>> 73cf0cca325056a65d6a15f7b93ba76eb41155ba
+
