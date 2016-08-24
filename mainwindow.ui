@@ -559,6 +559,11 @@ border:0px;</string>
     <string>退出</string>
    </property>
   </action>
+  <action name="decode">
+   <property name="text">
+    <string>打开编码文件</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>

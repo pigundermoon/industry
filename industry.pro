@@ -15,27 +15,24 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = industry
 TEMPLATE = app
 
-#QMAKE_CXXFLAGS_RELEASE = -MD
-#QMAKE_CXXFLAGS_DEBUG = -MDd
+QMAKE_CXXFLAGS_RELEASE = -MD
+QMAKE_CXXFLAGS_DEBUG = -MDd
 
 INCLUDEPATH += $$quote(C:\software\coding toools\opencv\build\include)
 INCLUDEPATH += $$quote(C:\software\coding toools\opencv\build\include\opencv)
 INCLUDEPATH += $$quote(C:\software\coding toools\opencv\build\include\opencv2)
 INCLUDEPATH += $$quote(C:\software\small tools\tiff\include)
-#INCLUDEPATH += $$quote(C:\Program Files (x86)\DCMTK\include)
+INCLUDEPATH += $$quote(C:\Program Files (x86)\DCMTK\include)
 
-#LIBS+=  wsock32.lib \
-#        NetAPI32.Lib \
-#        AdvAPI32.Lib
-#        zlib.lib
-
-
+LIBS+=  wsock32.lib \
+        NetAPI32.Lib \
+        AdvAPI32.Lib
+        zlib.lib
 
 #LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_core2410d.lib)
 #LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_highgui2410d.lib)
 #LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_imgproc2410d.lib)
 #LIBS += $$quote(C:\software\small tools\tiff\lib\libtiff.lib)
-
 #LIBS+=  $$quote(C:\Program Files (x86)\DCMTK_DEBUG\lib\ofstd.lib) \
 #        $$quote(C:\Program Files (x86)\DCMTK_DEBUG\lib\oflog.lib) \
 #        $$quote(C:\Program Files (x86)\DCMTK_DEBUG\lib\dcmdata.lib)
@@ -44,10 +41,9 @@ LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_core2
 LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_highgui2410.lib)
 LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_imgproc2410.lib)
 LIBS += $$quote(C:\software\small tools\tiff\lib\libtiff.lib)
-
-#LIBS+=  $$quote(C:\Program Files (x86)\DCMTK\lib\ofstd.lib) \
-#        $$quote(C:\Program Files (x86)\DCMTK\lib\oflog.lib) \
-#        $$quote(C:\Program Files (x86)\DCMTK\lib\dcmdata.lib)
+LIBS+=  $$quote(C:\Program Files (x86)\DCMTK\lib\ofstd.lib) \
+        $$quote(C:\Program Files (x86)\DCMTK\lib\oflog.lib) \
+        $$quote(C:\Program Files (x86)\DCMTK\lib\dcmdata.lib)
 
 
 
@@ -65,10 +61,13 @@ SOURCES += main.cpp \
     ui_denoise.cpp \
     ui_about.cpp \
     processing.cpp \
-    algorithm.cpp
+    algorithm.cpp \
+    dcmtkfile.cpp \
+    recdcmtkfile.cpp
 
 
-HEADERS  += mainwindow.h \
+HEADERS  += dcmtkfile.h \
+            mainwindow.h \
             hist.h \
             c_gradation.h \
     myslider.h \
@@ -79,7 +78,9 @@ HEADERS  += mainwindow.h \
     ui_denoise.h \
     ui_about.h \
     processing.h \
-    algorithm.h
+    algorithm.h \
+    recdcmtkfile.h
+
 
 FORMS    += mainwindow.ui \
             c_gradation.ui \

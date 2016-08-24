@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
     w.setWindowTitle(QString::fromLocal8Bit("工业探伤"));
     w.initialize();
 
+
     QDesktopWidget *desktop = QApplication::desktop();
     QRect cur = desktop->availableGeometry(desktop->primaryScreen());
     w.setFixedSize(cur.width(), cur.height());
