@@ -57,8 +57,6 @@ private slots:
 
     void r_lhdr_dst(cv::Mat a);
 
-    void r_ratetext(QString s);
-
     void on_openfile_triggered();
 
     void on_hist_triggered();
