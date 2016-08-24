@@ -59,5 +59,29 @@
         <file>img/zoomout_down.png</file>
         <file>img/zoomout_hover.png</file>
         <file>img/zoomout_normal.png</file>
+        <file>img/accelerate_down.png</file>
+        <file>img/accelerate_hover.png</file>
+        <file>img/accelerate_normal.png</file>
+        <file>img/decelerate_down.png</file>
+        <file>img/decelerate_hover.png</file>
+        <file>img/decelerate_normal.png</file>
+        <file>img/first_down.png</file>
+        <file>img/first_hover.png</file>
+        <file>img/first_normal.png</file>
+        <file>img/last_down.png</file>
+        <file>img/last_hover.png</file>
+        <file>img/last_normal.png</file>
+        <file>img/next_down.png</file>
+        <file>img/next_hover.png</file>
+        <file>img/next_normal.png</file>
+        <file>img/pause_down.png</file>
+        <file>img/pause_hover.png</file>
+        <file>img/pause_normal.png</file>
+        <file>img/play_down.png</file>
+        <file>img/play_hover.png</file>
+        <file>img/play_normal.png</file>
+        <file>img/previous_down.png</file>
+        <file>img/previous_hover.png</file>
+        <file>img/previous_normal.png</file>
     </qresource>
 </RCC>

@@ -5,6 +5,7 @@
 QWidget#menuBar:item
 {
     background-color:rgb(150, 150, 150);
+    height: 100px;
 }
 QWidget#menuBar:item:unhovered
 {
@@ -253,12 +254,13 @@ QToolBar
     background:rgb(85, 85, 85);
     border-top: 1px solid rgb(55, 55, 55);
     border-bottom: 1px solid rgb(55, 55, 55);
+    font-size: 18px;
 }
 
 QToolBar::separator
 {
     background-color:rgb(55, 55, 55);
-    width:1;
+    width:2;
     margin-top:2;
     margin-bottom:2;
     margin-left:5;
@@ -329,15 +331,15 @@ QLineEdit
 {
     color: rgb(255, 255, 255);
     background-color: rgb(55, 55, 55);
-    margin: 4px;
+    margin: 6px;
 }
 
 QComboBox {
     border: 0px solid;
     color: rgb(255, 255, 255);
     background: rgb(55, 55, 55);
-    margin-top: 4px;
-    margin-bottom: 4px;
+    margin-top: 6px;
+    margin-bottom: 6px;
     padding-left:2px;
 }
 
