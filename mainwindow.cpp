@@ -88,6 +88,7 @@ void MainWindow::initialize()
     ui->scrollshowimg->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->scrollshowimg->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scrollclicked=false;
+
     ui->winshowimg->installEventFilter(this);
     double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
     ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
@@ -577,10 +578,6 @@ void MainWindow::openfile(QString filename, int type)
 
         show_image(srcimgshort,1);
 
-//        tshowimg=showimg.scaled(ow*sliderpos/1000,oh*sliderpos/1000,Qt::KeepAspectRatio,Qt::SmoothTransformation);
-//        ui->winshowimg->setPixmap(QPixmap::fromImage(tshowimg));
-//        ui->winshowimg->setAlignment(Qt::AlignVCenter|Qt::AlignHCenter);
-
         QGraphicsDropShadowEffect *e1=new QGraphicsDropShadowEffect;
         e1->setColor(QColor(0,0,0));
         e1->setBlurRadius(10);
@@ -632,17 +629,7 @@ void MainWindow::on_rate_editingFinished()
     setCurScale(position);
 }
 
-////放缩大小滑块
-//void MainWindow::on_showimgscale_valueChanged(int value)
-//{
 
-//    settext(QString::number(float(value)/10,'f',1));
-//    double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
-//    ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
-//    cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-//    levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
-//    show_image(timg,1);
-//}
 
 
 //触发调整色阶按钮
@@ -977,13 +964,7 @@ void MainWindow::r_imagechar(cv::Mat_<unsigned char> img)
 
     ui->winshowimg->setPixmap(QPixmap::fromImage(showimg));
 }
-void MainWindow::r_ratetext(QString s){
-    int value = s.toInt();
-    curScale = value;
-    tshowimg=showimg.scaled(ow*value/100,oh*value/100,Qt::KeepAspectRatio,Qt::SmoothTransformation);
-    ui->winshowimg->setPixmap(QPixmap::fromImage(tshowimg));
-    ui->winshowimg->setAlignment(Qt::AlignVCenter|Qt::AlignHCenter);
-}
+
 void MainWindow::r_lhdr_dst(cv::Mat a)
 {
     cv::Mat_<unsigned char> img;
