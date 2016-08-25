@@ -51,7 +51,6 @@ extern void levelAdjustment(Mat_<unsigned short>  input, Mat_<unsigned short> & 
 
 static QString recfilename;
 static vector<QString> filelist;
-static int ptr;
 static dcmtkfile* dcmFile;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -79,10 +78,8 @@ void MainWindow::initialize()
     label_loc_bias=0;
 
     ui->imagelist->setResizeMode(QListView::Adjust);
-    ui->imagelist->setViewMode(QListView::IconMode);
     ui->imagelist->setMovement(QListView::Static);
     ui->imagelist->setSpacing(0);
-    ptr=0;
 
     ui->toolBar->setIconSize(QSize(30, 30));
 
@@ -456,7 +453,7 @@ void MainWindow::on_resave_triggered()
 void MainWindow::on_imagelist_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
 {
     if (current == previous) return;
-    int num=current->text().toInt()-1;
+    int num=ui->imagelist->currentRow();
     QString filename=filelist[num];
     openfile(filename,2);
 }
@@ -555,9 +552,35 @@ void MainWindow::openfile(QString filename, int type)
         QImage tshowimage=mat2qimage(srcimgchar);
         QImage timage=tshowimage.scaled(ui->imagelist->width()-5,ui->imagelist->height(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
         filelist.push_back(filename);
-        QListWidgetItem* Item = new QListWidgetItem( QIcon(QPixmap::fromImage(timage)),QString::number(++ptr ));
-        ui->imagelist->setIconSize(QSize(timage.width(),timage.height()));
-        ui->imagelist->addItem(Item);
+
+//        QListWidgetItem* Item = new QListWidgetItem(QIcon(QPixmap::fromImage(timage)),QString::number(++ptr ));
+//        ui->imagelist->setIconSize(QSize(timage.width(),timage.height()));
+//        ui->imagelist->addItem(Item);
+        QListWidgetItem *item = new QListWidgetItem();
+        ui->imagelist->addItem(item);
+
+        QWidget *widget = new QWidget;
+        QVBoxLayout *layout = new QVBoxLayout;
+
+        QLabel *label = new QLabel;
+        label->setPixmap(QPixmap::fromImage(timage));
+        label->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        layout->addWidget(label);
+
+        label = new QLabel;
+        label->setText(filename.split('/').back());
+        label->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+        label->setAlignment(Qt::AlignCenter);
+        label->setStyleSheet("color: white;"
+                             "height: 40;"
+                             "font-family: Arial;"
+                             "font-size: 12px;");
+        layout->addWidget(label);
+
+        widget->setLayout(layout);
+        item->setSizeHint(QSize(ui->imagelist->width(), ui->imagelist->width() - 80));
+        ui->imagelist->setItemWidget(item, widget);
+        ui->imagelist->setCurrentItem(item);
     }
 
 

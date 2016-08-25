@@ -75,7 +75,7 @@
                <x>0</x>
                <y>0</y>
                <width>898</width>
-               <height>312</height>
+               <height>308</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout">
@@ -310,7 +310,10 @@ margin-right:5
              </font>
             </property>
             <property name="styleSheet">
-             <string notr="true">width:25px</string>
+             <string notr="true">color: rgb(255, 255, 255);
+background-color: rgb(55, 55, 55);
+margin: 6px;
+width:25px</string>
             </property>
             <property name="frame">
              <bool>false</bool>
