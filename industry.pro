@@ -26,7 +26,7 @@ INCLUDEPATH += $$quote(C:\Program Files (x86)\DCMTK\include)
 
 LIBS+=  wsock32.lib \
         NetAPI32.Lib \
-        AdvAPI32.Lib
+        AdvAPI32.Lib \
         zlib.lib
 
 #LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_core2410d.lib)

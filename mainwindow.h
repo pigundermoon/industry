@@ -99,6 +99,8 @@ private slots:
     void on_zoom_triggered();
 
 
+    void on_mark_triggered();
+
 signals:
     void s_imageshort(cv::Mat_<unsigned short>);
     void s_hist(cv::Mat_<unsigned char>);
@@ -119,7 +121,7 @@ private:
     ui_denoise* w_denoise;
 
     QString label_loc[4];
-    int label_loc_bias;
+    int label_loc_ptr[4];
 
     cv::Mat_<unsigned char> srcimgchar;
     cv::Mat_<unsigned short> srcimgshort;
@@ -134,6 +136,14 @@ private:
 
     QPoint cpos;
     bool cclicked;
+
+    //用于去阶梯化
+    bool rgflag;
+    int rgxmin,rgxmax;
+    QPoint rgstpos;
+    QPoint rgedpos;
+    QPainter rgpainter;
+
     int ingray;
 
     int ow;

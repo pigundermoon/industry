@@ -38,6 +38,7 @@ bool dcmtkfile::checkfile(QString path)
         else
         {
             cerr<<"get name failed!"<<endl;
+            return false;
         }
         if (fileformat.getDataset()->findAndGetOFString(DCM_PatientID,id).good())
         {
@@ -47,15 +48,18 @@ bool dcmtkfile::checkfile(QString path)
         else
         {
             cerr<<"get id failed!"<<endl;
+            return false;
         }
         if (fileformat.getDataset()->findAndGetOFString(DCM_StudyDate,date).good())
         {
 
             qDebug("date: %s\n",date);
+
         }
         else
         {
             cerr<<"get date failed!"<<endl;
+            return false;
         }
         if (fileformat.getDataset()->findAndGetOFString(DCM_StudyTime,time).good())
         {
@@ -65,6 +69,7 @@ bool dcmtkfile::checkfile(QString path)
         else
         {
             cerr<<"get time failed!"<<endl;
+            return false;
         }
         if (fileformat.getDataset()->findAndGetUint16(DCM_Rows,height).good())
         {
@@ -73,6 +78,7 @@ bool dcmtkfile::checkfile(QString path)
         else
         {
             cerr<<"get height failed!"<<endl;
+            return false;
         }
         if (fileformat.getDataset()->findAndGetUint16(DCM_Columns,width).good())
         {
@@ -81,10 +87,12 @@ bool dcmtkfile::checkfile(QString path)
         else
         {
             cerr<<"get width failed!"<<endl;
+            return false;
         }
     }
     else
     {
+        cerr<<"open failed!"<<endl;
         return false;
     }
 }

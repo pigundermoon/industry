@@ -473,8 +473,19 @@ QPushButton {width:30px;height:30px;}</string>
     <property name="title">
      <string>图像增强</string>
     </property>
+    <widget class="QMenu" name="menu_7">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>去阶梯化</string>
+     </property>
+     <addaction name="mark"/>
+     <addaction name="removegrade"/>
+    </widget>
     <addaction name="contrast"/>
     <addaction name="denoise"/>
+    <addaction name="menu_7"/>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="autoFillBackground">
@@ -493,9 +504,9 @@ QPushButton {width:30px;height:30px;}</string>
      <property name="title">
       <string>翻转            </string>
      </property>
-     <addaction name="turn_horizontal"/>
-     <addaction name="separator"/>
      <addaction name="turn_vertical"/>
+     <addaction name="separator"/>
+     <addaction name="turn_horizontal"/>
     </widget>
     <addaction name="invert"/>
     <addaction name="turn"/>
@@ -563,8 +574,8 @@ QPushButton {width:30px;height:30px;}</string>
    <addaction name="separator"/>
    <addaction name="contrast"/>
    <addaction name="invert"/>
-   <addaction name="turn_horizontal"/>
    <addaction name="turn_vertical"/>
+   <addaction name="turn_horizontal"/>
    <addaction name="rotate_tool"/>
    <addaction name="separator"/>
    <addaction name="text_tool"/>
@@ -679,25 +690,25 @@ QPushButton {width:30px;height:30px;}</string>
     <string>色调均化直方图</string>
    </property>
   </action>
-  <action name="turn_horizontal">
+  <action name="turn_vertical">
    <property name="icon">
     <iconset resource="src.qrc">
      <normaloff>:/img/img/horizontal_normal.png</normaloff>:/img/img/horizontal_normal.png</iconset>
    </property>
    <property name="text">
-    <string>水平翻转</string>
+    <string>竖直翻转</string>
    </property>
    <property name="iconVisibleInMenu">
     <bool>false</bool>
    </property>
   </action>
-  <action name="turn_vertical">
+  <action name="turn_horizontal">
    <property name="icon">
     <iconset resource="src.qrc">
      <normaloff>:/img/img/vertical_normal.png</normaloff>:/img/img/vertical_normal.png</iconset>
    </property>
    <property name="text">
-    <string>竖直翻转</string>
+    <string>水平翻转</string>
    </property>
    <property name="iconVisibleInMenu">
     <bool>false</bool>
@@ -808,6 +819,21 @@ QPushButton {width:30px;height:30px;}</string>
    </property>
    <property name="text">
     <string>长度</string>
+   </property>
+  </action>
+  <action name="rgradation">
+   <property name="text">
+    <string>选取标定图</string>
+   </property>
+  </action>
+  <action name="mark">
+   <property name="text">
+    <string>标定</string>
+   </property>
+  </action>
+  <action name="removegrade">
+   <property name="text">
+    <string>去除阶梯</string>
    </property>
   </action>
  </widget>

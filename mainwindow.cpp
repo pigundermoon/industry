@@ -71,12 +71,15 @@ MainWindow::~MainWindow()
 void MainWindow::initialize()
 {
     dcmFile = new dcmtkfile();
-
+    rgflag=false;
     label_loc[0]=QString("[L]");
     label_loc[1]=QString("[H]");
     label_loc[2]=QString("[R]");
     label_loc[3]=QString("[F]");
-    label_loc_bias=0;
+    label_loc_ptr[0]=0;
+    label_loc_ptr[1]=1;
+    label_loc_ptr[2]=2;
+    label_loc_ptr[3]=3;
 
     ui->imagelist->setResizeMode(QListView::Adjust);
     ui->imagelist->setViewMode(QListView::IconMode);
@@ -227,10 +230,10 @@ void MainWindow::show_image(cv::Mat_<unsigned short> s, int type)
     painter.setPen(pen);
     painter.setFont(font);
 
-    painter.drawText(20,showimg.height()/2,label_loc[(0+label_loc_bias)%4]);
-    painter.drawText(showimg.width()/2,20,label_loc[(1+label_loc_bias)%4]);
-    painter.drawText(showimg.width()-50,showimg.height()/2,label_loc[(2+label_loc_bias)%4]);
-    painter.drawText(showimg.width()/2,showimg.height()-20,label_loc[(3+label_loc_bias)%4]);
+    painter.drawText(20,showimg.height()/2,label_loc[label_loc_ptr[0]]);
+    painter.drawText(showimg.width()/2,20,label_loc[label_loc_ptr[1]]);
+    painter.drawText(showimg.width()-50,showimg.height()/2,label_loc[label_loc_ptr[2]]);
+    painter.drawText(showimg.width()/2,showimg.height()-20,label_loc[label_loc_ptr[3]]);
 
 
     ui->winshowimg->setPixmap(QPixmap::fromImage(showimg));
@@ -239,7 +242,7 @@ void MainWindow::show_image(cv::Mat_<unsigned short> s, int type)
 
 bool MainWindow::eventFilter(QObject *target, QEvent *e)
 {
-    if (target == ui->winshowimg && !srcimgshort.empty())
+    if (target == ui->winshowimg && !srcimgshort.empty() && !rgflag)
     {
         if (e->type() == QEvent::MouseButtonPress)
         {
@@ -257,7 +260,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
                 return true;
             }
         }
-        else if(e->type() == QEvent::MouseMove)
+        else if(e->type() == QEvent::MouseMove)  
         {
 
             QMouseEvent* ev = static_cast<QMouseEvent*>(e);
@@ -326,11 +329,52 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
         else if(e->type() == QEvent::Wheel)
         {
             QWheelEvent* ev = static_cast<QWheelEvent*>(e);
-            int num=ev->delta()/10;
-            setCurScale(curScale + num);
+            int num=ev->delta()/50;
+            setCurScale(curScale + num);     
             return true;
         }
+    }
+    else if(target == ui->winshowimg && !srcimgshort.empty() && rgflag)
+    {
+        if (e->type() == QEvent::MouseButtonPress)
+        {
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            if (ev->button()==Qt::LeftButton)
+            {
+                rgstpos=ev->pos();
+                return true;
+            }
+        }
+        else if(e->type() == QEvent::MouseMove)
+        {
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            if (ev->button()==Qt::LeftButton)
+            {
+                rgedpos=ev->pos();
 
+                QPainter painter(&showimg); //为这个QImage构造一个QPainter
+                painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+
+
+                //改变画笔和字体
+                QPen pen = painter.pen();
+                pen.setColor(Qt::white);
+                QFont font = painter.font();
+                font.setBold(true);//加粗
+                font.setPixelSize(20);//改变字体大小
+
+                painter.setPen(pen);
+                painter.setFont(font);
+                return true;
+            }
+        }
+        else if(e->type() == QEvent::MouseButtonRelease)
+        {
+
+
+            rgflag=false;
+            setCursor(Qt::ArrowCursor);
+        }
     }
 
     return QMainWindow::eventFilter(target, e);
@@ -355,6 +399,7 @@ void MainWindow::enableaction()
     ui->turn->setEnabled(true);
     ui->contrast->setEnabled(true);
     ui->denoise->setEnabled(true);
+    ui->rgradation->setEnabled(true);
     pRate->setEnabled(true);
 }
 void MainWindow::disableaction()
@@ -375,6 +420,7 @@ void MainWindow::disableaction()
     ui->turn->setEnabled(false);
     ui->contrast->setEnabled(false);
     ui->denoise->setEnabled(false);
+    ui->rgradation->setEnabled(false);
     pRate->setEnabled(false);
 }
 
@@ -526,7 +572,7 @@ void MainWindow::openfile(QString filename, int type)
     enableaction();
     if (srcimgshort_temp.rows>srcimgshort_temp.cols)
     {
-        label_loc_bias=1;
+        label_loc_ptr[0]=1;label_loc_ptr[1]=2;label_loc_ptr[2]=3;label_loc_ptr[3]=0;
         srcimgshort=cv::Mat(srcimgshort_temp.cols,srcimgshort_temp.rows,CV_16UC1);
         for (int i=0;i<srcimgshort_temp.rows;i++)
         {
@@ -539,7 +585,7 @@ void MainWindow::openfile(QString filename, int type)
     }
     else
     {
-        label_loc_bias=0;
+        label_loc_ptr[0]=0;label_loc_ptr[1]=1;label_loc_ptr[2]=2;label_loc_ptr[3]=3;
         srcimgshort = srcimgshort_temp;
     }
     srcimgchar=cv::Mat(srcimgshort.rows,srcimgshort.cols,CV_8UC1);
@@ -900,7 +946,9 @@ void MainWindow::on_turn_horizontal_triggered()
     }
 
 
-
+    int tmplabel = label_loc_ptr[0];
+    label_loc_ptr[0] = label_loc_ptr[2];
+    label_loc_ptr[2] = tmplabel;
     show_image(srcimgshort);
 
     reset();
@@ -929,7 +977,9 @@ void MainWindow::on_turn_vertical_triggered()
             srcimgshort(i,j)=timg(h-1-i,j);
         }
     }
-
+    int tmplabel = label_loc_ptr[1];
+    label_loc_ptr[1] = label_loc_ptr[3];
+    label_loc_ptr[3] = tmplabel;
     show_image(srcimgshort);
 
     reset();
@@ -978,10 +1028,10 @@ void MainWindow::r_imagechar(cv::Mat_<unsigned char> img)
     painter.setPen(pen);
     painter.setFont(font);
 
-    painter.drawText(20,showimg.height()/2,"L");
-    painter.drawText(showimg.width()/2,20,"H");
-    painter.drawText(showimg.width()-20,showimg.height()/2,"R");
-    painter.drawText(showimg.width()/2,showimg.height()-20,"F");
+    painter.drawText(20,showimg.height()/2,label_loc[label_loc_ptr[0]]);
+    painter.drawText(showimg.width()/2,20,label_loc[label_loc_ptr[1]]);
+    painter.drawText(showimg.width()-50,showimg.height()/2,label_loc[label_loc_ptr[2]]);
+    painter.drawText(showimg.width()/2,showimg.height()-20,label_loc[label_loc_ptr[3]]);
 
 
     ui->winshowimg->setPixmap(QPixmap::fromImage(showimg));
@@ -1031,10 +1081,10 @@ void MainWindow::r_lhdr_dst(cv::Mat a)
     painter.setPen(pen);
     painter.setFont(font);
 
-    painter.drawText(20,showimg.height()/2,"L");
-    painter.drawText(showimg.width()/2,20,"H");
-    painter.drawText(showimg.width()-20,showimg.height()/2,"R");
-    painter.drawText(showimg.width()/2,showimg.height()-20,"F");
+    painter.drawText(20,showimg.height()/2,label_loc[label_loc_ptr[0]]);
+    painter.drawText(showimg.width()/2,20,label_loc[label_loc_ptr[1]]);
+    painter.drawText(showimg.width()-50,showimg.height()/2,label_loc[label_loc_ptr[2]]);
+    painter.drawText(showimg.width()/2,showimg.height()-20,label_loc[label_loc_ptr[3]]);
 
 
     ui->winshowimg->setPixmap(QPixmap::fromImage(showimg));
@@ -1125,3 +1175,9 @@ void MainWindow::on_zoom_triggered()
     setCurScale(100);
 }
 
+
+void MainWindow::on_mark_triggered()
+{
+    rgflag=true;
+    setCursor(Qt::CrossCursor);
+}
