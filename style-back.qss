@@ -1,17 +1,19 @@
-﻿QWidget#menuBar
+﻿QMenuBar
 {
     background-color:rgb(150, 150, 150);
+    font-family: 微软雅黑;
+    font-size: 16px;
 }
-QWidget#menuBar:item
+QMenuBar:item
 {
     background-color:rgb(150, 150, 150);
-    height: 100px;
+    padding: 5px 10px;
 }
-QWidget#menuBar:item:unhovered
+QMenuBar:item:unhovered
 {
     color:black;
 }
-QWidget#menuBar:item:selected
+QMenuBar:item:selected
 {
     color:white;
     background-color:#787878;
@@ -19,6 +21,11 @@ QWidget#menuBar:item:selected
     border-top-left-radius: 2px;
     border-width:3px;
     border-color:black;
+}
+QMenu
+{
+    font-family: 微软雅黑;
+    font-size: 15px;
 }
 QWidget#centralWidget
 {
@@ -33,29 +40,11 @@ QWidget#scrollAreaWidgetContents
     background-color:#282828;
 }
 
-QListWidget#imagelist::item:selected
-{
-
-    border: 3px solid #6a6ea9;
-    background-color:transparent;
-}
-
-
 QSplitter::handle {
     background-color:#555555;
 }
 QSplitter::handle:horizontal {
     width: 0px;
-}
-
-QLineEdit#rate
-{
-    background-color: rgb(107, 107, 107);
-    padding: 2px;
-    selection-background-color:rgb(180, 180, 180);
-    border: 1px;
-    border-radius: 2px;
-    color: silver;
 }
 
 QPushButton#inb
@@ -327,14 +316,14 @@ QToolButton#about {border-image: url(:/img/img/help_normal.png);}
 QToolButton#about:hover:!pressed {border-image: url(:/img/img/help_hover.png);}
 QToolButton#about:hover:pressed {border-image: url(:/img/img/help_down.png);}
 
-QLineEdit
+QToolBar QLineEdit
 {
     color: rgb(255, 255, 255);
     background-color: rgb(55, 55, 55);
     margin: 6px;
 }
 
-QComboBox {
+QToolBar QComboBox {
     border: 0px solid;
     color: rgb(255, 255, 255);
     background: rgb(55, 55, 55);
@@ -343,19 +332,34 @@ QComboBox {
     padding-left:2px;
 }
 
-QComboBox::drop-down
+QToolBar QComboBox::drop-down
 {
     border-width: 0px;
 }
 
-QComboBox::down-arrow
+QToolBar QComboBox::down-arrow
 {
 }
 
-QComboBox QAbstractItemView
+QToolBar QComboBox QAbstractItemView
 {
     border-radius: 0px;
     outline: 0;
     background-color: lightgray;
     selection-background-color: darkgray;
+}
+
+QWidget#imagelist
+{
+    show-decoration-selected: 1;
+    outline:0;
+}
+
+QWidget#imagelist::item {
+    background: rgba(75, 75, 75, 255);
+    border: 2px solid color(55, 55, 55);
+}
+QWidget#imagelist::item:selected {
+    background: rgba(65, 65, 65, 255);
+    border: 2px solid red;
 }
