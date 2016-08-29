@@ -24,6 +24,7 @@
 #include "QComboBox"
 #include "QMessageBox"
 #include "QFileSystemModel"
+#include "QToolButton"
 
 
 

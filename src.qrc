@@ -83,5 +83,28 @@
         <file>img/previous_down.png</file>
         <file>img/previous_hover.png</file>
         <file>img/previous_normal.png</file>
+        <file>img/accelerate_disabled.png</file>
+        <file>img/arrow_disabled.png</file>
+        <file>img/cancel_disabled.png</file>
+        <file>img/contrast_disabled.png</file>
+        <file>img/coordinate_disabled.png</file>
+        <file>img/decelerate_disabled.png</file>
+        <file>img/first_disabled.png</file>
+        <file>img/help_disabled.png</file>
+        <file>img/horizontal_disabled.png</file>
+        <file>img/invert_disabled.png</file>
+        <file>img/last_disabled.png</file>
+        <file>img/length_disabled.png</file>
+        <file>img/next_disabled.png</file>
+        <file>img/pause_disabled.png</file>
+        <file>img/play_disabled.png</file>
+        <file>img/previous_disabled.png</file>
+        <file>img/resize_disabled.png</file>
+        <file>img/rotate_disabled.png</file>
+        <file>img/text_disabled.png</file>
+        <file>img/vertical_disabled.png</file>
+        <file>img/zoom_disabled.png</file>
+        <file>img/zoomin_disabled.png</file>
+        <file>img/zoomout_disabled.png</file>
     </qresource>
 </RCC>

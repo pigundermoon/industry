@@ -91,16 +91,33 @@ void MainWindow::initialize()
     double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
     ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
 
-    for(int i = 0; i < ui->toolBar->actions().length(); i++){
-        ui->toolBar->widgetForAction(ui->toolBar->actions().at(i))->setObjectName(ui->toolBar->actions().at(i)->objectName());
-    }
-
     QAction *ref = ui->toolBar->actions().at(3);
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
     QFont font;
     font.setFamily("Microsoft YaHei");
     font.setPointSize(11);
     font.setWeight(QFont::Normal);
+
+    //取消
+    QToolButton *button = new QToolButton();
+    button->setToolTip(ui->back->toolTip());
+    connect(button, SIGNAL(released()), ui->back, SLOT(trigger()));
+//    ButtonActionAdapter *adapter = new ButtonActionAdapter(this, ui->back, button);
+//    adapter->local_connect();
+    button->setStyleSheet("QToolButton {margin: 5px; border-image: url(:/img/img/cancel_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/cancel_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/cancel_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/cancel_disabled.png);}");
+
+    ui->toolBar->addWidget(button);
+    //分隔符
+    ui->toolBar->addSeparator();
+    //
+    button = new QToolButton();
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/resize_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/resize_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/resize_down.png);}");
+    ui->toolBar->addWidget(button);
 
     //选择窗宽窗位模式
     QComboBox *box = new QComboBox(ui->toolBar);
@@ -111,14 +128,14 @@ void MainWindow::initialize()
     box->addItem("Auto");
     box->addItem("FullImage");
     box->setCurrentIndex(-1);
-    ui->toolBar->insertWidget(ref, box);
+    ui->toolBar->addWidget(box);
     //窗宽
     QLabel *label = new QLabel(QString::fromLocal8Bit("窗宽"), ui->toolBar);
     label->setStyleSheet("color: rgb(255, 255, 255);"
                          "margin: 5px;"
                          "border-bottom-width: 2px;");
     label->setFont(font);
-    ui->toolBar->insertWidget(ref, label);
+    ui->toolBar->addWidget(label);
     //数值
     QLineEdit *line = new QLineEdit(ui->toolBar);
     line->setAlignment(Qt::AlignRight);
@@ -127,14 +144,14 @@ void MainWindow::initialize()
     line->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     line->setFixedWidth(70);
     line->setFont(font);
-    ui->toolBar->insertWidget(ref, line);
+    ui->toolBar->addWidget(line);
     //窗位
     label = new QLabel(QString::fromLocal8Bit("窗位"), ui->toolBar);
     label->setStyleSheet("color: rgb(255, 255, 255);"
                          "margin: 5px;"
                          "border-bottom-width: 2px;");
     label->setFont(font);
-    ui->toolBar->insertWidget(ref, label);
+    ui->toolBar->addWidget(label);
     //数值
     line = new QLineEdit(ui->toolBar);
     line->setAlignment(Qt::AlignRight);
@@ -143,17 +160,36 @@ void MainWindow::initialize()
     line->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     line->setFixedWidth(70);
     line->setFont(font);
-    ui->toolBar->insertWidget(ref, line);
+    ui->toolBar->addWidget(line);
+    //分隔符
+    ui->toolBar->addSeparator();
+    //
+    button = new QToolButton();
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/zoomin_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/zoomin_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/zoomin_down.png);}");
+    ui->toolBar->addWidget(button);
+    //
+    button = new QToolButton();
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/zoomout_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/zoomout_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/zoomout_down.png);}");
+    ui->toolBar->addWidget(button);
+    //
+    button = new QToolButton();
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/zoom_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/zoom_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/zoom_down.png);}");
+    ui->toolBar->addWidget(button);
 
     //缩放比例
-    ref = ui->toolBar->actions().at(12);
     pRate = new QLineEdit(ui->toolBar);
     pRate->setAlignment(Qt::AlignRight);
     pRate->setFrame(false);
     pRate->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     pRate->setFixedWidth(50);
     pRate->setFont(font);
-    ui->toolBar->insertWidget(ref, pRate);
+    ui->toolBar->addWidget(pRate);
     connect(pRate, SIGNAL(editingFinished()), this, SLOT(on_rate_editingFinished()));
     disableaction();
     //百分号
@@ -164,7 +200,92 @@ void MainWindow::initialize()
                          "margin-right:5px;"
                          "border-bottom-width: 2px;");
     label->setFont(font);
-    ui->toolBar->insertWidget(ref, label);
+    ui->toolBar->addWidget(label);
+    //分隔符
+    ui->toolBar->addSeparator();
+    //
+    button = new QToolButton();
+    button->setToolTip(ui->contrast->toolTip());
+    connect(button, SIGNAL(released()), ui->contrast, SLOT(trigger()));
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/contrast_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/contrast_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/contrast_down.png);}"
+                     "QToolButton:disabled {border-image: url(:/img/img/contrast_disabled.png);}");
+    ui->toolBar->addWidget(button);
+    //
+    button = new QToolButton();
+    button->setToolTip(ui->invert->toolTip());
+    connect(button, SIGNAL(released()), ui->invert, SLOT(trigger()));
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/invert_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/invert_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/invert_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/invert_disabled.png);}");
+    ui->toolBar->addWidget(button);
+    //
+    button = new QToolButton();
+    button->setToolTip(ui->turn_horizontal->toolTip());
+    connect(button, SIGNAL(released()), ui->turn_horizontal, SLOT(trigger()));
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/horizontal_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/horizontal_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/horizontal_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/horizontal_disabled.png);}");
+    ui->toolBar->addWidget(button);
+    //
+    button = new QToolButton();
+    button->setToolTip(ui->turn_vertical->toolTip());
+    connect(button, SIGNAL(released()), ui->turn_vertical, SLOT(trigger()));
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/vertical_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/vertical_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/vertical_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/vertical_disabled.png);}");
+    ui->toolBar->addWidget(button);
+    //
+    button = new QToolButton();
+//    button->setDefaultAction(ui->contrast);
+//    button->setText("");
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/rotate_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/rotate_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/rotate_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/rotate_disabled.png);}");
+    ui->toolBar->addWidget(button);
+    //分隔符
+    ui->toolBar->addSeparator();
+    //
+    button = new QToolButton();
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/text_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/text_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/text_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/text_disabled.png);}");
+    ui->toolBar->addWidget(button);
+    //
+    button = new QToolButton();
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/arrow_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/arrow_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/arrow_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/arrow_disabled.png);}");
+    ui->toolBar->addWidget(button);
+    //
+    button = new QToolButton();
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/coordinate_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/coordinate_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/coordinate_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/coordinate_disabled.png);}");
+    ui->toolBar->addWidget(button);
+    //
+    button = new QToolButton();
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/length_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/length_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/length_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/length_disabled.png);}");
+    ui->toolBar->addWidget(button);
+    //分隔符
+    ui->toolBar->addSeparator();
+    //
+    button = new QToolButton();
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/help_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/help_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/help_down.png);}");
+    ui->toolBar->addWidget(button);
 
     QDirModel *model = new QDirModel;
     ui->fileexplorer->setModel(model);
@@ -343,7 +464,7 @@ void MainWindow::enableaction()
     ui->turn_horizontal->setEnabled(true);
     ui->turn_vertical->setEnabled(true);
     ui->invert->setEnabled(true);
-    ui->back->setEnabled(true);
+    //ui->back->setEnabled(true);
     ui->hdr->setEnabled(true);
     ui->localadaptive_hdr->setEnabled(true);
     ui->hist_hdr->setEnabled(true);
@@ -751,6 +872,8 @@ void MainWindow::on_localadaptive_hdr_triggered()
 //对比度
 void MainWindow::on_contrast_triggered()
 {
+    if(!ui->contrast->isEnabled())
+        return;
     if (srcimgshort.empty()) return;
     w_contrast=new ui_contrast();
     QObject::connect(this,SIGNAL(s_imageshort(cv::Mat_<unsigned short>)),w_contrast,SLOT(r_imageshort(cv::Mat_<unsigned short>)));
@@ -877,6 +1000,8 @@ void MainWindow::on_about_triggered()
 //触发正负片按钮
 void MainWindow::on_invert_triggered()
 {
+    if(!ui->invert->isEnabled())
+        return;
     ui->back->setEnabled(true);
     if ((int)backup.size()<maxback)
     {
@@ -900,6 +1025,8 @@ void MainWindow::on_invert_triggered()
 //触发水平翻转按钮
 void MainWindow::on_turn_horizontal_triggered()
 {
+    if(!ui->turn_horizontal->isEnabled())
+        return;
     ui->back->setEnabled(true);
     if ((int)backup.size()<maxback)
     {
@@ -931,6 +1058,8 @@ void MainWindow::on_turn_horizontal_triggered()
 //触发竖直翻转按钮
 void MainWindow::on_turn_vertical_triggered()
 {
+    if(!ui->turn_vertical->isEnabled())
+        return;
     ui->back->setEnabled(true);
     if ((int)backup.size()<maxback)
     {
@@ -1105,6 +1234,8 @@ void MainWindow::r_ok(cv::Mat_<unsigned short> a)
 //回退申请
 void MainWindow::on_back_triggered()
 {
+    if(!ui->back->isEnabled())
+        return;
     if (backup.empty()) return;
 
     srcimgshort=backup.back();
