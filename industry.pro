@@ -8,6 +8,7 @@
 
 
 QT       += core gui
+QT       += sql
 
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -63,7 +64,8 @@ SOURCES += main.cpp \
     processing.cpp \
     algorithm.cpp \
     dcmtkfile.cpp \
-    recdcmtkfile.cpp
+    recdcmtkfile.cpp \
+    database.cpp
 
 
 HEADERS  += dcmtkfile.h \
@@ -79,7 +81,8 @@ HEADERS  += dcmtkfile.h \
     ui_about.h \
     processing.h \
     algorithm.h \
-    recdcmtkfile.h
+    recdcmtkfile.h \
+    database.h
 
 
 FORMS    += \

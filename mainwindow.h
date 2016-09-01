@@ -24,6 +24,7 @@
 #include "QComboBox"
 #include "QMessageBox"
 #include "QFileSystemModel"
+#include "database.h"
 
 
 
@@ -101,6 +102,8 @@ private slots:
 
     void on_mark_triggered();
 
+    void on_removegrade_triggered();
+
 signals:
     void s_imageshort(cv::Mat_<unsigned short>);
     void s_hist(cv::Mat_<unsigned char>);
@@ -142,7 +145,18 @@ private:
     int rgxmin,rgxmax;
     QPoint rgstpos;
     QPoint rgedpos;
-    QPainter rgpainter;
+    int* rgvector;
+    int vectornum;
+
+    //数据库相关
+    database industry_db;
+    imageitem cur_item;
+
+    //current item changed
+    bool listchangedflag;
+
+
+
 
     int ingray;
 

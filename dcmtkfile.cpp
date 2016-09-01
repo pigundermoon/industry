@@ -109,7 +109,7 @@ cv::Mat dcmtkfile::loadfile(QString path)
         if (fileformat.getDataset()->findAndGetOFString(DCM_PatientName,name).good())
         {
 
-            qDebug("name: %s\n",name);
+//            qDebug("name: %s\n",name);
         }
         else
         {
@@ -118,7 +118,7 @@ cv::Mat dcmtkfile::loadfile(QString path)
         if (fileformat.getDataset()->findAndGetOFString(DCM_PatientID,id).good())
         {
 
-            qDebug("id: %s\n",id);
+//            qDebug("id: %s\n",id);
         }
         else
         {
@@ -127,7 +127,7 @@ cv::Mat dcmtkfile::loadfile(QString path)
         if (fileformat.getDataset()->findAndGetOFString(DCM_StudyDate,date).good())
         {
 
-            qDebug("date: %s\n",date);
+//            qDebug("date: %s\n",date);
         }
         else
         {
@@ -136,7 +136,7 @@ cv::Mat dcmtkfile::loadfile(QString path)
         if (fileformat.getDataset()->findAndGetOFString(DCM_StudyTime,time).good())
         {
 
-            qDebug("time: %s\n",time);
+//            qDebug("time: %s\n",time);
         }
         else
         {
@@ -144,7 +144,7 @@ cv::Mat dcmtkfile::loadfile(QString path)
         }
         if (fileformat.getDataset()->findAndGetUint16(DCM_Rows,height).good())
         {
-            qDebug("height: %d\n",height);
+//            qDebug("height: %d\n",height);
         }
         else
         {
@@ -152,7 +152,7 @@ cv::Mat dcmtkfile::loadfile(QString path)
         }
         if (fileformat.getDataset()->findAndGetUint16(DCM_Columns,width).good())
         {
-            qDebug("width: %d\n",width);
+//            qDebug("width: %d\n",width);
         }
         else
         {

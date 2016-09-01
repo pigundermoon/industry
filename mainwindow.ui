@@ -476,9 +476,9 @@ QPushButton {width:30px;height:30px;}</string>
     <property name="title">
      <string>图像增强</string>
     </property>
-    <widget class="QMenu" name="menu_7">
+    <widget class="QMenu" name="rgradation">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="title">
       <string>去阶梯化</string>
@@ -488,7 +488,7 @@ QPushButton {width:30px;height:30px;}</string>
     </widget>
     <addaction name="contrast"/>
     <addaction name="denoise"/>
-    <addaction name="menu_7"/>
+    <addaction name="rgradation"/>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="autoFillBackground">
@@ -791,7 +791,12 @@ QPushButton {width:30px;height:30px;}</string>
   <action name="text_tool">
    <property name="icon">
     <iconset resource="src.qrc">
-     <normaloff>:/img/img/text_normal.png</normaloff>:/img/img/text_normal.png</iconset>
+     <normaloff>:/img/img/text_normal.png</normaloff>
+     <normalon>:/img/img/text_normal.png</normalon>
+     <activeoff>:/img/img/text_hover.png</activeoff>
+     <activeon>:/img/img/text_down.png</activeon>
+     <selectedoff>:/img/img/text_hover.png</selectedoff>
+     <selectedon>:/img/img/text_hover.png</selectedon>:/img/img/text_normal.png</iconset>
    </property>
    <property name="text">
     <string>文字标记</string>
@@ -824,12 +829,16 @@ QPushButton {width:30px;height:30px;}</string>
     <string>长度</string>
    </property>
   </action>
-  <action name="rgradation">
-   <property name="text">
-    <string>选取标定图</string>
-   </property>
-  </action>
   <action name="mark">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>标定</string>
    </property>

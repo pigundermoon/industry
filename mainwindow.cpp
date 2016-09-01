@@ -64,11 +64,31 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-
+    if (!srcimgshort.empty())
+    {
+        if (cur_item.exist)
+        {
+            industry_db.update_imageitem(cur_item);
+        }
+        else
+        {
+            industry_db.insert_imageitem(cur_item);
+        }
+    }
+    free(rgvector);
+    rgvector=NULL;
     delete ui;
 }
 void MainWindow::initialize()
 {
+    industry_db.initialize();
+
+    cur_item.exist=false;
+
+    listchangedflag=false;
+
+    vectornum=0;
+    rgvector=NULL;
     dcmFile = new dcmtkfile();
     rgflag=false;
     label_loc[0]=QString("[L]");
@@ -174,7 +194,7 @@ void MainWindow::initialize()
     ui->fileexplorer->setRootIndex(model->index(""));
 }
 
-//type=0，无变化，只平移，type=1，有变化，缩放/改变
+//type=0，无变化，只平移，type=1，有变化，缩放/改变，type=2，要划线
 void MainWindow::show_image(cv::Mat_<unsigned short> s, int type)
 {
     int height = ((double)curScale)/100*s.rows;
@@ -213,28 +233,36 @@ void MainWindow::show_image(cv::Mat_<unsigned short> s, int type)
     showimg=mat2qimage(matshowimg,0);
 
     showimg=showimg.convertToFormat(QImage::Format_ARGB32);
-    QPainter painter(&showimg); //为这个QImage构造一个QPainter
-    painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+
+    QPainter* showpainter = new QPainter(&showimg);
+    showpainter->setCompositionMode(QPainter::CompositionMode_SourceIn);
 
 
     //改变画笔和字体
-    QPen pen = painter.pen();
+    QPen pen = showpainter->pen();
     pen.setColor(Qt::white);
-    QFont font = painter.font();
+    QFont font = showpainter->font();
     font.setBold(true);//加粗
     font.setPixelSize(20);//改变字体大小
+    font.setFamily("Microsoft YaHei UI");
 
-    painter.setPen(pen);
-    painter.setFont(font);
+    showpainter->setPen(pen);
+    showpainter->setFont(font);
 
-    painter.drawText(20,showimg.height()/2,label_loc[label_loc_ptr[0]]);
-    painter.drawText(showimg.width()/2,20,label_loc[label_loc_ptr[1]]);
-    painter.drawText(showimg.width()-50,showimg.height()/2,label_loc[label_loc_ptr[2]]);
-    painter.drawText(showimg.width()/2,showimg.height()-20,label_loc[label_loc_ptr[3]]);
+    showpainter->drawText(20,showimg.height()/2,label_loc[label_loc_ptr[0]]);
+    showpainter->drawText(showimg.width()/2,20,label_loc[label_loc_ptr[1]]);
+    showpainter->drawText(showimg.width()-50,showimg.height()/2,label_loc[label_loc_ptr[2]]);
+    showpainter->drawText(showimg.width()/2,showimg.height()-20,label_loc[label_loc_ptr[3]]);
 
+    if (type==2)
+    {
+        pen.setColor(Qt::red);
+        showpainter->setPen(pen);
+        showpainter->drawLine(rgstpos,rgedpos);
+    }
 
     ui->winshowimg->setPixmap(QPixmap::fromImage(showimg));
-
+    showpainter->end();
 }
 
 bool MainWindow::eventFilter(QObject *target, QEvent *e)
@@ -335,6 +363,11 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
     {
         if (e->type() == QEvent::MouseButtonPress)
         {
+            if (rgvector!=NULL)
+            {
+                free(rgvector);
+                rgvector=NULL;
+            }
             QMouseEvent* ev = static_cast<QMouseEvent*>(e);
             if (ev->button()==Qt::LeftButton)
             {
@@ -344,33 +377,59 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
         }
         else if(e->type() == QEvent::MouseMove)
         {
+
             QMouseEvent* ev = static_cast<QMouseEvent*>(e);
-            if (ev->button()==Qt::LeftButton)
-            {
-                rgedpos=ev->pos();
+            rgedpos=ev->pos();
+            show_image(srcimgshort,2);
 
-                QPainter painter(&showimg); //为这个QImage构造一个QPainter
-                painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+            return true;
 
-
-                //改变画笔和字体
-                QPen pen = painter.pen();
-                pen.setColor(Qt::white);
-                QFont font = painter.font();
-                font.setBold(true);//加粗
-                font.setPixelSize(20);//改变字体大小
-
-                painter.setPen(pen);
-                painter.setFont(font);
-                return true;
-            }
         }
         else if(e->type() == QEvent::MouseButtonRelease)
         {
-
-
             rgflag=false;
             setCursor(Qt::ArrowCursor);
+
+            float strate = w_center+
+            ((double)((rgstpos.x()<rgedpos.x()?rgstpos.x():rgedpos.x())-ui->winshowimg->width()/2)/(((double)curScale)/100) / srcimgshort.cols);
+            if (strate<0.01||strate>0.99) strate =0.01;
+
+            float edrate = w_center+
+            ((double)((rgstpos.x()>rgedpos.x()?rgstpos.x():rgedpos.x())-ui->winshowimg->width()/2)/(((double)curScale)/100) / srcimgshort.cols);
+            if ((!(edrate>strate))||edrate>1) edrate=0.99;
+
+
+            rgvector = (int *)malloc(srcimgshort.rows*sizeof(int));
+            if (rgvector==NULL)
+            {
+                cerr<<"allocate error!"<<endl;
+                return false;
+            }
+            vectornum = srcimgshort.rows;
+
+            memset(rgvector,0,sizeof(rgvector));
+
+            int ttsum=0;
+            for (int i=0;i<srcimgshort.rows;i++)
+            {
+                int tsum=0;
+                int cnt=0;
+                for (int j=strate*srcimgshort.cols;j<edrate*srcimgshort.cols;j++)
+                {
+                    cnt++;
+                    tsum+=srcimgshort[i][j];
+                }
+                rgvector[i]=tsum/cnt;
+                ttsum+=rgvector[i];
+            }
+            ttsum/=vectornum;
+            for (int i=0;i<srcimgshort.rows;i++)
+            {
+                rgvector[i]=ttsum - rgvector[i];
+            }
+
+            show_image(srcimgshort,0);
+
         }
     }
 
@@ -498,7 +557,16 @@ void MainWindow::on_resave_triggered()
 
 void MainWindow::on_imagelist_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
 {
-    if (current == previous) return;
+    if (current == previous || previous==NULL)
+    {
+        listchangedflag=false;
+        return;
+    }
+    if (listchangedflag == true)
+    {
+        listchangedflag = false;
+        return;
+    }
     int num=ui->imagelist->currentRow();
     QString filename=filelist[num];
     openfile(filename,2);
@@ -514,6 +582,17 @@ void MainWindow::openfile(QString filename, int type)
         }
     }
 
+    if (!srcimgshort.empty() && (type==1 || type==2))
+    {
+        if (cur_item.exist)
+        {
+            industry_db.update_imageitem(cur_item);
+        }
+        else
+        {
+            industry_db.insert_imageitem(cur_item);
+        }
+    }
 
     if (filename.isEmpty()) return;
 
@@ -585,6 +664,33 @@ void MainWindow::openfile(QString filename, int type)
         label_loc_ptr[0]=0;label_loc_ptr[1]=1;label_loc_ptr[2]=2;label_loc_ptr[3]=3;
         srcimgshort = srcimgshort_temp;
     }
+
+    if (type == 1 || type == 2)
+    {
+        cur_item = industry_db.query_imageitem(filename);
+        if (!cur_item.exist)
+        {
+            cur_item.path=filename;
+            cur_item.name=filename.split('/').back();
+
+            QDateTime dt;
+            QTime time;
+            QDate date;
+            dt.setTime(time.currentTime());
+            dt.setDate(date.currentDate());
+            cur_item.date=dt.toString("yyyy-MM-dd-hh-mm-ss");
+
+            cur_item.id = "tmp";
+            cur_item.operation = "tmp";
+        }
+        else
+        {
+
+
+        }
+
+    }
+
     srcimgchar=cv::Mat(srcimgshort.rows,srcimgshort.cols,CV_8UC1);
     for (int i=0;i<srcimgshort.rows;i++)
     {
@@ -593,15 +699,13 @@ void MainWindow::openfile(QString filename, int type)
             srcimgchar(i,j)=unsigned char(double(srcimgshort(i,j))/65535*255);
         }
     }
+
     if (type==0||type==1)
     {
         QImage tshowimage=mat2qimage(srcimgchar);
         QImage timage=tshowimage.scaled(ui->imagelist->width()-5,ui->imagelist->height(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
         filelist.push_back(filename);
 
-//        QListWidgetItem* Item = new QListWidgetItem(QIcon(QPixmap::fromImage(timage)),QString::number(++ptr ));
-//        ui->imagelist->setIconSize(QSize(timage.width(),timage.height()));
-//        ui->imagelist->addItem(Item);
         QListWidgetItem *item = new QListWidgetItem();
         ui->imagelist->addItem(item);
 
@@ -624,9 +728,13 @@ void MainWindow::openfile(QString filename, int type)
         layout->addWidget(label);
 
         widget->setLayout(layout);
-        item->setSizeHint(QSize(ui->imagelist->width(), ui->imagelist->width() - 80));
+        item->setSizeHint(QSize(ui->imagelist->width(), ui->imagelist->width() /2));
         ui->imagelist->setItemWidget(item, widget);
-        ui->imagelist->setCurrentItem(item);
+        if(type == 1)
+        {
+            listchangedflag = true;
+            ui->imagelist->setCurrentItem(item);
+        }
     }
 
 
@@ -686,15 +794,19 @@ void MainWindow::openfile(QString filename, int type)
 //打开文件
 void MainWindow::on_openfile_triggered()
 {
-
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
     QStringList filelist = QFileDialog::getOpenFileNames(this,QString::fromLocal8Bit("打开"),"","Images (*.tif *.tiff);;(*.*)");
      for(QStringList::Iterator it=filelist.begin();it!=filelist.end();it++)
     {
         if (it==filelist.begin())
+        {
             openfile(*it,1);
+        }
         else
+        {
             openfile(*it,0);
+        }
+
     }
 }
 
@@ -1035,29 +1147,30 @@ void MainWindow::r_imagechar(cv::Mat_<unsigned char> img)
         }
     }
     showimg=mat2qimage(matshowimg,0);
-
     showimg=showimg.convertToFormat(QImage::Format_ARGB32);
-    QPainter painter(&showimg); //为这个QImage构造一个QPainter
-    painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+
+    QPainter* showpainter = new QPainter(&showimg);
+    showpainter->setCompositionMode(QPainter::CompositionMode_SourceIn);
     //设置画刷的组合模式CompositionMode_SourceOut这个模式为目标图像在上。
 
     //改变画笔和字体
-    QPen pen = painter.pen();
+    QPen pen = showpainter->pen();
     pen.setColor(Qt::white);
-    QFont font = painter.font();
+    QFont font = showpainter->font();
     font.setBold(true);//加粗
     font.setPixelSize(20);//改变字体大小
 
-    painter.setPen(pen);
-    painter.setFont(font);
+    showpainter->setPen(pen);
+    showpainter->setFont(font);
 
-    painter.drawText(20,showimg.height()/2,label_loc[label_loc_ptr[0]]);
-    painter.drawText(showimg.width()/2,20,label_loc[label_loc_ptr[1]]);
-    painter.drawText(showimg.width()-50,showimg.height()/2,label_loc[label_loc_ptr[2]]);
-    painter.drawText(showimg.width()/2,showimg.height()-20,label_loc[label_loc_ptr[3]]);
+    showpainter->drawText(20,showimg.height()/2,label_loc[label_loc_ptr[0]]);
+    showpainter->drawText(showimg.width()/2,20,label_loc[label_loc_ptr[1]]);
+    showpainter->drawText(showimg.width()-50,showimg.height()/2,label_loc[label_loc_ptr[2]]);
+    showpainter->drawText(showimg.width()/2,showimg.height()-20,label_loc[label_loc_ptr[3]]);
 
 
     ui->winshowimg->setPixmap(QPixmap::fromImage(showimg));
+    showpainter->end();
 }
 
 void MainWindow::r_lhdr_dst(cv::Mat a)
@@ -1090,27 +1203,30 @@ void MainWindow::r_lhdr_dst(cv::Mat a)
     showimg=mat2qimage(matshowimg,0);
 
     showimg=showimg.convertToFormat(QImage::Format_ARGB32);
-    QPainter painter(&showimg); //为这个QImage构造一个QPainter
-    painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+
+    QPainter* showpainter = new QPainter(&showimg);
+    showpainter->setCompositionMode(QPainter::CompositionMode_SourceIn);
     //设置画刷的组合模式CompositionMode_SourceOut这个模式为目标图像在上。
 
     //改变画笔和字体
-    QPen pen = painter.pen();
+    QPen pen = showpainter->pen();
     pen.setColor(Qt::white);
-    QFont font = painter.font();
+    QFont font = showpainter->font();
     font.setBold(true);//加粗
     font.setPixelSize(20);//改变字体大小
 
-    painter.setPen(pen);
-    painter.setFont(font);
+    showpainter->setPen(pen);
+    showpainter->setFont(font);
 
-    painter.drawText(20,showimg.height()/2,label_loc[label_loc_ptr[0]]);
-    painter.drawText(showimg.width()/2,20,label_loc[label_loc_ptr[1]]);
-    painter.drawText(showimg.width()-50,showimg.height()/2,label_loc[label_loc_ptr[2]]);
-    painter.drawText(showimg.width()/2,showimg.height()-20,label_loc[label_loc_ptr[3]]);
+    showpainter->drawText(20,showimg.height()/2,label_loc[label_loc_ptr[0]]);
+    showpainter->drawText(showimg.width()/2,20,label_loc[label_loc_ptr[1]]);
+    showpainter->drawText(showimg.width()-50,showimg.height()/2,label_loc[label_loc_ptr[2]]);
+    showpainter->drawText(showimg.width()/2,showimg.height()-20,label_loc[label_loc_ptr[3]]);
 
 
     ui->winshowimg->setPixmap(QPixmap::fromImage(showimg));
+    showpainter->end();
+
 }
 
 //16位
@@ -1203,4 +1319,34 @@ void MainWindow::on_mark_triggered()
 {
     rgflag=true;
     setCursor(Qt::CrossCursor);
+}
+
+void MainWindow::on_removegrade_triggered()
+{
+    ui->back->setEnabled(true);
+    if ((int)backup.size() < maxback)
+    {
+        backup.push_back(srcimgshort-0);
+    }
+    else
+    {
+        backup.pop_front();
+        backup.push_back(srcimgshort-0);
+    }
+
+    if (rgvector!=NULL && srcimgshort.rows==vectornum)
+    {
+        for (int i=0;i<srcimgshort.rows;i++)
+        {
+            for (int j=0;j<srcimgshort.cols;j++)
+            {
+                srcimgshort(i,j)+=rgvector[i];
+            }
+        }
+    }
+    double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
+    ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
+    cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
+    levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
+    show_image(timg,1);
 }
