@@ -91,12 +91,12 @@
               <property name="bottomMargin">
                <number>0</number>
               </property>
-              <item row="0" column="0">
-               <widget class="QLabel" name="winshowimg">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
                 <property name="sizePolicy">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="winshowimg">
                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
@@ -567,7 +567,6 @@ QPushButton {width:30px;height:30px;}</string>
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-<<<<<<< HEAD
    <addaction name="cancel_tool"/>
    <addaction name="separator"/>
    <addaction name="resize_tool"/>
@@ -588,8 +587,6 @@ QPushButton {width:30px;height:30px;}</string>
    <addaction name="length"/>
    <addaction name="separator"/>
    <addaction name="about"/>
-=======
->>>>>>> 469854abe56d4d0361b6cfb255ac140d2f8e9601
   </widget>
   <action name="openfile">
    <property name="text">

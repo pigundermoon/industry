@@ -24,11 +24,8 @@
 #include "QComboBox"
 #include "QMessageBox"
 #include "QFileSystemModel"
-<<<<<<< HEAD
 #include "database.h"
-=======
 #include "QToolButton"
->>>>>>> 469854abe56d4d0361b6cfb255ac140d2f8e9601
 
 
 
