@@ -30,7 +30,7 @@
    <property name="styleSheet">
     <string notr="true"/>
    </property>
-   <layout class="QGridLayout" name="gridLayout_5">
+   <layout class="QGridLayout" name="gridLayout_5" columnstretch="1,5">
     <item row="0" column="1">
      <widget class="QWidget" name="widget_2" native="true">
       <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
@@ -74,8 +74,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>898</width>
-               <height>308</height>
+               <width>953</width>
+               <height>330</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout">
@@ -400,14 +400,14 @@ QPushButton {width:30px;height:30px;}</string>
     <item row="0" column="0">
      <widget class="QListWidget" name="imagelist">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Maximum" vsizetype="Expanding">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
       <property name="maximumSize">
        <size>
-        <width>250</width>
+        <width>16777215</width>
         <height>16777215</height>
        </size>
       </property>
@@ -567,6 +567,7 @@ QPushButton {width:30px;height:30px;}</string>
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+<<<<<<< HEAD
    <addaction name="cancel_tool"/>
    <addaction name="separator"/>
    <addaction name="resize_tool"/>
@@ -587,6 +588,8 @@ QPushButton {width:30px;height:30px;}</string>
    <addaction name="length"/>
    <addaction name="separator"/>
    <addaction name="about"/>
+=======
+>>>>>>> 469854abe56d4d0361b6cfb255ac140d2f8e9601
   </widget>
   <action name="openfile">
    <property name="text">
@@ -732,15 +735,6 @@ QPushButton {width:30px;height:30px;}</string>
   <action name="exit">
    <property name="text">
     <string>退出</string>
-   </property>
-  </action>
-  <action name="cancel_tool">
-   <property name="icon">
-    <iconset resource="src.qrc">
-     <normaloff>:/img/img/cancel_normal.png</normaloff>:/img/img/cancel_normal.png</iconset>
-   </property>
-   <property name="text">
-    <string>撤销</string>
    </property>
   </action>
   <action name="resize_tool">
