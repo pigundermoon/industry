@@ -125,8 +125,8 @@ void MainWindow::initialize()
     QToolButton *button = new QToolButton();
     button->setToolTip(ui->back->toolTip());
     connect(button, SIGNAL(released()), ui->back, SLOT(trigger()));
-//    ButtonActionAdapter *adapter = new ButtonActionAdapter(this, ui->back, button);
-//    adapter->local_connect();
+    ButtonActionAdapter *adapter = new ButtonActionAdapter(this, ui->back, button);
+    adapter->local_connect();
     button->setStyleSheet("QToolButton {margin: 5px; border-image: url(:/img/img/cancel_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/cancel_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/cancel_down.png);}"
@@ -139,7 +139,8 @@ void MainWindow::initialize()
     button = new QToolButton();
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/resize_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/resize_hover.png);}"
-                     "QToolButton:hover:pressed {border-image: url(:/img/img/resize_down.png);}");
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/resize_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/resize_disabled.png);}");
     ui->toolBar->addWidget(button);
 
     //选择窗宽窗位模式
@@ -189,23 +190,32 @@ void MainWindow::initialize()
     //
     button = new QToolButton();
     connect(button, SIGNAL(released()), this, SLOT(on_zoom_in_triggered()));
+    adapter = new ButtonActionAdapter(this, ui->zoom_in, button);
+    adapter->local_connect();
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/zoomin_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/zoomin_hover.png);}"
-                     "QToolButton:hover:pressed {border-image: url(:/img/img/zoomin_down.png);}");
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/zoomin_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/zoomin_disabled.png);}");
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
     connect(button, SIGNAL(released()), this, SLOT(on_zoom_out_triggered()));
+    adapter = new ButtonActionAdapter(this, ui->zoom_out, button);
+    adapter->local_connect();
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/zoomout_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/zoomout_hover.png);}"
-                     "QToolButton:hover:pressed {border-image: url(:/img/img/zoomout_down.png);}");
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/zoomout_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/zoomout_disabled.png);}");
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
     connect(button, SIGNAL(released()), this, SLOT(on_zoom_triggered()));
+    adapter = new ButtonActionAdapter(this, ui->zoom, button);
+    adapter->local_connect();
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/zoom_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/zoom_hover.png);}"
-                     "QToolButton:hover:pressed {border-image: url(:/img/img/zoom_down.png);}");
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/zoom_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/zoom_disabled.png);}");
     ui->toolBar->addWidget(button);
 
     //缩放比例
@@ -217,7 +227,6 @@ void MainWindow::initialize()
     pRate->setFont(font);
     ui->toolBar->addWidget(pRate);
     connect(pRate, SIGNAL(editingFinished()), this, SLOT(on_rate_editingFinished()));
-    disableaction();
     //百分号
     label = new QLabel("%", ui->toolBar);
     label->setStyleSheet("color: rgb(255, 255, 255);"
@@ -233,6 +242,8 @@ void MainWindow::initialize()
     button = new QToolButton();
     button->setToolTip(ui->contrast->toolTip());
     connect(button, SIGNAL(released()), ui->contrast, SLOT(trigger()));
+    adapter = new ButtonActionAdapter(this, ui->contrast, button);
+    adapter->local_connect();
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/contrast_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/contrast_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/contrast_down.png);}"
@@ -242,6 +253,8 @@ void MainWindow::initialize()
     button = new QToolButton();
     button->setToolTip(ui->invert->toolTip());
     connect(button, SIGNAL(released()), ui->invert, SLOT(trigger()));
+    adapter = new ButtonActionAdapter(this, ui->invert, button);
+    adapter->local_connect();
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/invert_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/invert_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/invert_down.png);}"
@@ -251,6 +264,8 @@ void MainWindow::initialize()
     button = new QToolButton();
     button->setToolTip(ui->turn_horizontal->toolTip());
     connect(button, SIGNAL(released()), ui->turn_horizontal, SLOT(trigger()));
+    adapter = new ButtonActionAdapter(this, ui->turn_horizontal, button);
+    adapter->local_connect();
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/horizontal_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/horizontal_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/horizontal_down.png);}"
@@ -260,6 +275,8 @@ void MainWindow::initialize()
     button = new QToolButton();
     button->setToolTip(ui->turn_vertical->toolTip());
     connect(button, SIGNAL(released()), ui->turn_vertical, SLOT(trigger()));
+    adapter = new ButtonActionAdapter(this, ui->turn_vertical, button);
+    adapter->local_connect();
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/vertical_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/vertical_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/vertical_down.png);}"
@@ -267,8 +284,7 @@ void MainWindow::initialize()
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
-//    button->setDefaultAction(ui->contrast);
-//    button->setText("");
+    button->setEnabled(false);
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/rotate_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/rotate_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/rotate_down.png);}"
@@ -278,6 +294,7 @@ void MainWindow::initialize()
     ui->toolBar->addSeparator();
     //
     button = new QToolButton();
+    button->setEnabled(false);
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/text_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/text_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/text_down.png);}"
@@ -285,6 +302,7 @@ void MainWindow::initialize()
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
+    button->setEnabled(false);
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/arrow_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/arrow_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/arrow_down.png);}"
@@ -292,6 +310,7 @@ void MainWindow::initialize()
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
+    button->setEnabled(false);
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/coordinate_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/coordinate_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/coordinate_down.png);}"
@@ -299,6 +318,7 @@ void MainWindow::initialize()
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
+    button->setEnabled(false);
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/length_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/length_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/length_down.png);}"
@@ -317,6 +337,10 @@ void MainWindow::initialize()
     QDirModel *model = new QDirModel;
     ui->fileexplorer->setModel(model);
     ui->fileexplorer->setRootIndex(model->index(""));
+
+    ui->back->setEnabled(true);
+    enableaction();
+    disableaction();
 }
 
 //type=0，无变化，只平移，type=1，有变化，缩放/改变，type=2，要划线
@@ -770,6 +794,7 @@ void MainWindow::openfile(QString filename, int type)
 
     recfilename = filename;
 
+    disableaction();
     enableaction();
     if (srcimgshort_temp.rows>srcimgshort_temp.cols)
     {

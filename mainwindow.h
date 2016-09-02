@@ -26,7 +26,7 @@
 #include "QFileSystemModel"
 #include "database.h"
 #include "QToolButton"
-
+#include "buttonactionadapter.h"
 
 
 
