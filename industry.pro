@@ -65,7 +65,8 @@ SOURCES += main.cpp \
     algorithm.cpp \
     dcmtkfile.cpp \
     recdcmtkfile.cpp \
-    database.cpp
+    database.cpp \
+    buttonactionadapter.cpp
 
 
 HEADERS  += dcmtkfile.h \
@@ -82,7 +83,8 @@ HEADERS  += dcmtkfile.h \
     processing.h \
     algorithm.h \
     recdcmtkfile.h \
-    database.h
+    database.h \
+    buttonactionadapter.h
 
 
 FORMS    += \
