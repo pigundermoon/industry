@@ -188,18 +188,21 @@ void MainWindow::initialize()
     ui->toolBar->addSeparator();
     //
     button = new QToolButton();
+    connect(button, SIGNAL(released()), this, SLOT(on_zoom_in_triggered()));
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/zoomin_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/zoomin_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/zoomin_down.png);}");
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
+    connect(button, SIGNAL(released()), this, SLOT(on_zoom_out_triggered()));
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/zoomout_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/zoomout_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/zoomout_down.png);}");
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
+    connect(button, SIGNAL(released()), this, SLOT(on_zoom_triggered()));
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/zoom_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/zoom_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/zoom_down.png);}");
@@ -305,6 +308,7 @@ void MainWindow::initialize()
     ui->toolBar->addSeparator();
     //
     button = new QToolButton();
+    connect(button, SIGNAL(released()), ui->about, SLOT(trigger()));
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/help_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/help_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/help_down.png);}");
@@ -1430,18 +1434,21 @@ void MainWindow::on_exit_triggered()
 
 void MainWindow::on_zoom_out_triggered()
 {
+    if (srcimgshort.empty()) return;
     if (curScale-1>=minScale && curScale-1<=maxScale)
         setCurScale(curScale - 1);
 }
 
 void MainWindow::on_zoom_in_triggered()
 {
+    if (srcimgshort.empty()) return;
     if (curScale + 1 >= minScale && curScale + 1 <= maxScale)
         setCurScale(curScale + 1);
 }
 
 void MainWindow::on_zoom_triggered()
 {
+    if (srcimgshort.empty()) return;
     setCurScale(100);
 }
 
