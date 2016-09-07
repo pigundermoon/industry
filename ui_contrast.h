@@ -33,10 +33,9 @@ private slots:
     void on_plus_clicked();
 
 signals:
-    void s_imagechar(cv::Mat_<unsigned char>);
     void s_imageshort(cv::Mat_<unsigned short>);
     void s_cancel();
-    void s_ok(cv::Mat_<unsigned short>);
+    void s_ok(cv::Mat_<unsigned short>, QString opt);
 private:
     Ui::ui_contrast *ui;
     cv::Mat_<unsigned short> srcimg;

@@ -27,9 +27,10 @@
 #include "database.h"
 #include "QToolButton"
 #include "buttonactionadapter.h"
+#include "QStandardItemModel"
+#include "vector"
 
-
-
+enum right_workstatus{rsta_translation=0,rsta_mark=1,rsta_drawrect=2,rsta_changerect=3,rsta_dragrect=4};
 
 namespace Ui {
 class MainWindow;
@@ -49,6 +50,7 @@ public:
 private slots:
 
     void r_imageshort(cv::Mat_<unsigned short> img);
+    void r_imageshort_cgra(cv::Mat_<unsigned short> img);
 
     void r_imagechar(cv::Mat_<unsigned char> img);
 
@@ -56,9 +58,9 @@ private slots:
 
     void r_cancel();
 
-    void r_ok(cv::Mat_<unsigned short> a);
+    void r_ok(cv::Mat_<unsigned short> a, QString opt);
 
-    void r_lhdr_dst(cv::Mat a);
+    void r_ok_hist(unsigned short tindark, unsigned short tingray, unsigned short tinwhite, unsigned short toutdark, unsigned short toutwhite);
 
     void on_openfile_triggered();
 
@@ -105,8 +107,15 @@ private slots:
 
     void on_removegrade_triggered();
 
+    void on_fileexplorer_doubleClicked(const QModelIndex &index);
+
+    void on_drawrect_triggered();
+
+    void on_resetdraw_triggered();
+
 signals:
     void s_imageshort(cv::Mat_<unsigned short>);
+    void s_imageshort_hist(cv::Mat_<unsigned short>, unsigned short indark,unsigned short ingray,unsigned short inwhite,unsigned short outdark, unsigned short outwhite);
     void s_hist(cv::Mat_<unsigned char>);
     void s_number(int);
     void s_imageinfo(recdcmtkfile* file);
@@ -128,12 +137,13 @@ private:
     int label_loc_ptr[4];
 
     cv::Mat_<unsigned char> srcimgchar;
+    cv::Mat_<unsigned short> raw_srcimgshort;
     cv::Mat_<unsigned short> srcimgshort;
     cv::Mat_<unsigned short> cvtsrcimgchar;
     std::deque<cv::Mat_<unsigned short>> backup;
     void enableaction();
     void disableaction();
-    void show_image(cv::Mat_<unsigned short> s, int type = 1);
+    void show_image(cv::Mat_<unsigned short> s, int type = 1, bool notcgra = true);
 
     QPoint scrollpos;
     bool scrollclicked;
@@ -141,8 +151,9 @@ private:
     QPoint cpos;
     bool cclicked;
 
+    right_workstatus rstatus;
+
     //用于去阶梯化
-    bool rgflag;
     int rgxmin,rgxmax;
     QPoint rgstpos;
     QPoint rgedpos;
@@ -152,9 +163,23 @@ private:
     //数据库相关
     database industry_db;
     imageitem cur_item;
+    QStandardItemModel* dataset_model;//数据库浏览
+    void refresh_dataset();
 
     //current item changed
     bool listchangedflag;
+
+    //绘图相关
+    drawcharlist cur_chartlist;
+    drawchart oldchart;
+    void update_chartlist(QString chart);
+    QPoint stdrawpos;
+    QPoint prepos;
+    int pardraw;
+    void drawpaint(QPainter* painter);
+    bool drawst;
+
+
 
 
 

@@ -6,11 +6,38 @@
 #include "QPoint"
 #include "QtConcurrent/QtConcurrent"
 #include "algorithm"
+#include "QString"
+#include "QStringList"
+
 
 using namespace cv;
+using namespace std;
 
 #ifndef ALGORITHM
 #define ALGORITHM
+
+
+extern bool ifinvert;
+
+//操作序列解析
+//$0:1,2,3,4($分隔操作，：分隔函数名与参数，，分隔参数)
+extern cv::Mat_<unsigned short> parse_operationstr(QString operation, cv::Mat_<unsigned short> img);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 //色阶调整算法

@@ -56,12 +56,13 @@ cv::Mat_<unsigned char> pre_sendshort( cv::Mat_<unsigned short> img)
 
 void c_gradation::on_input_black_valueChanged(int arg1)
 {
+
     if(flag==1)
     {
         flag=0;
         return;
     }
-    if (arg1>ui->input_gray->value())
+    if (arg1>ui->input_white->value())
     {
         return;
     }
@@ -190,10 +191,9 @@ void c_gradation::on_input_white_valueChanged(int arg1)
 void c_gradation::on_inw_poschanged(int num)
 {
     int arg1=int(double(num-10)/320*65535);
-    if (ui->input_gray->value()+1>arg1)
+    if (arg1>65535)
     {
         return;
-        ui->input_white->setValue(ui->input_black->value()+2);
     }
     flag=1;
     ui->input_white->setValue(arg1);
@@ -258,12 +258,16 @@ void c_gradation::on_outpu_white_valueChanged(int arg1)
 }
 
 //收到发来16位图
-void c_gradation::r_imageshort(cv::Mat_<unsigned short> a)
+void c_gradation::r_imageshort_hist(cv::Mat_<unsigned short> a,unsigned short indark,unsigned short ingray,unsigned short inwhite,unsigned short outdark, unsigned short outwhite)
 {
     srcimg=a;
     output=Mat_<unsigned short>(a.rows, a.cols, CV_16UC1);
-    flag=0;
+
     rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
+    flag=0;ui->input_white->setValue(inwhite);
+//    flag=0;ui->input_gray->setValue(ingray);
+    flag=0;ui->input_black->setValue(indark);
+
 }
 
 
@@ -281,10 +285,9 @@ void c_gradation::on_b_cancel_clicked()
 void c_gradation::on_b_ok_clicked()
 {
 
-    levelAdjustment(srcimg, output, (unsigned short)ui->input_black->value(),
-                    (unsigned short)ui->input_gray->value(), (unsigned short)ui->input_white->value(),(unsigned short)ui->output_black->value(),
-                    (unsigned short)ui->outpu_white->value());
-    emit s_ok(output);
+   emit s_ok_hist((unsigned short)ui->input_black->value(),
+                   (unsigned short)ui->input_gray->value(), (unsigned short)ui->input_white->value(),(unsigned short)ui->output_black->value(),
+                   (unsigned short)ui->outpu_white->value());
     this->close();
 }
 

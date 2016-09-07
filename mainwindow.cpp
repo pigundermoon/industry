@@ -21,7 +21,7 @@
 #include "QTextStream"
 #include "QGraphicsDropShadowEffect"
 #include "QDirModel"
-#include "vector"
+
 
 
 using namespace std;
@@ -29,6 +29,8 @@ using namespace std;
 extern int maxback;
 
 extern int inout_interval;
+
+extern bool ifinvert;
 
 extern unsigned short indark, inwhite, outdark, outwhite;
 
@@ -81,6 +83,10 @@ MainWindow::~MainWindow()
 }
 void MainWindow::initialize()
 {
+    ifinvert = false;
+    ui->winshowimg->setMouseTracking(true);
+    rstatus = rsta_translation;
+    drawst=false;
     industry_db.initialize();
 
     cur_item.exist=false;
@@ -90,7 +96,6 @@ void MainWindow::initialize()
     vectornum=0;
     rgvector=NULL;
     dcmFile = new dcmtkfile();
-    rgflag=false;
     label_loc[0]=QString("[L]");
     label_loc[1]=QString("[H]");
     label_loc[2]=QString("[R]");
@@ -120,6 +125,10 @@ void MainWindow::initialize()
     font.setFamily("Microsoft YaHei");
     font.setPointSize(11);
     font.setWeight(QFont::Normal);
+
+//工具栏
+
+    {
 
     //取消
     QToolButton *button = new QToolButton();
@@ -334,33 +343,72 @@ void MainWindow::initialize()
                      "QToolButton:hover:pressed {border-image: url(:/img/img/help_down.png);}");
     ui->toolBar->addWidget(button);
 
-    QDirModel *model = new QDirModel;
-    ui->fileexplorer->setModel(model);
-    ui->fileexplorer->setRootIndex(model->index(""));
+    }
 
-    ui->back->setEnabled(true);
+    dataset_model = new QStandardItemModel(ui->fileexplorer);
+    dataset_model->setHorizontalHeaderLabels(QStringList()<<QStringLiteral("图片名")<<QStringLiteral("创建时间")<<QStringLiteral("路径"));
+    ui->fileexplorer->setModel(dataset_model);
+    ui->fileexplorer->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    refresh_dataset();
+
     enableaction();
     disableaction();
 }
 
-//type=0，无变化，只平移，type=1，有变化，缩放/改变，type=2，要划线
-void MainWindow::show_image(cv::Mat_<unsigned short> s, int type)
+
+void MainWindow::on_fileexplorer_doubleClicked(const QModelIndex &index)
+{
+    QString path;
+    if (index.column() == 2) path = index.data().toString();
+    else
+    {
+        path = index.sibling(index.row(),2).data().toString();
+    }
+    openfile(path,1);
+}
+
+void MainWindow::refresh_dataset()
+{
+    dataset_model->clear();
+    dataset_model->setHorizontalHeaderLabels(QStringList()<<QStringLiteral("图片名")<<QStringLiteral("创建时间")<<QStringLiteral("路径"));
+    QStringList pathset = industry_db.query_all();
+    for (int i=0;i<pathset.size();i++)
+    {
+        QString path = pathset.at(i);
+        imageitem tmpitem = industry_db.query_imageitem(path);
+        QStandardItem* itemimage = new QStandardItem(tmpitem.name);
+        dataset_model->appendRow(itemimage);
+        dataset_model->setItem(dataset_model->indexFromItem(itemimage).row(),1,new QStandardItem(tmpitem.date));
+        dataset_model->setItem(dataset_model->indexFromItem(itemimage).row(),2,new QStandardItem(tmpitem.path));
+    }
+}
+
+//type=0，无变化，只平移，type=1，有变化，缩放/改变，type=2，要划线，notcgra专为色阶窗口设计
+void MainWindow::show_image(cv::Mat_<unsigned short> s, int type, bool notcgra)
 {
     int height = ((double)curScale)/100*s.rows;
     int width = ((double)curScale)/100*s.cols;
-    double rate = ((double)curScale)/100;
+    double scalerate = ((double)curScale)/100;
     if (type==1)
     {
-        for (int i=0;i<srcimgshort.rows;i++)
+        cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(s.rows, s.cols, CV_16UC1);
+        double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
+        ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
+        if (notcgra) levelAdjustment(s,timg,indark,ingray,inwhite,outdark,outwhite);
+        else s.copyTo(timg);
+
+        if (ifinvert) timg = 65535 - timg;
+        for (int i=0;i<s.rows;i++)
         {
-            for (int j=0;j<srcimgshort.cols;j++)
+            for (int j=0;j<s.cols;j++)
             {
-                srcimgchar(i,j)=unsigned char(double(s(i,j))/65535*255);
+                srcimgchar(i,j)=unsigned char(double(timg(i,j))/65535*255);
             }
         }
         if(!cvtsrcimgchar.empty()) cvtsrcimgchar.release();
         cv::Mat tmp;
-        cv::resize(srcimgchar,tmp,cv::Size(width,height),rate,rate,CV_INTER_AREA);
+        cv::resize(srcimgchar,tmp,cv::Size(width,height),scalerate,scalerate,CV_INTER_AREA);
         tmp.copyTo(cvtsrcimgchar);
     }
 
@@ -403,26 +451,117 @@ void MainWindow::show_image(cv::Mat_<unsigned short> s, int type)
     showpainter->drawText(showimg.width()-50,showimg.height()/2,label_loc[label_loc_ptr[2]]);
     showpainter->drawText(showimg.width()/2,showimg.height()-20,label_loc[label_loc_ptr[3]]);
 
+    font.setBold(false);
+    font.setPixelSize(15);
+    showpainter->setFont(font);
+    pen.setColor(Qt::red);
+    showpainter->setPen(pen);
     if (type==2)
     {
-        pen.setColor(Qt::red);
-        showpainter->setPen(pen);
         showpainter->drawLine(rgstpos,rgedpos);
     }
+    drawpaint(showpainter);
+
+
+    showpainter->setPen(Qt::NoPen);
+    int dh = showimg.height()/40;
+    for (int i=0;i<=29;i++)
+    {
+        int value = i*(float(255)/30);
+        if (value>255) value = 255;
+        showpainter->setBrush(QBrush(QColor(value,value,value),Qt::SolidPattern));
+        showpainter->drawRect(60,showimg.height()-dh*5-i*dh,dh,dh);
+    }
+
+
 
     ui->winshowimg->setPixmap(QPixmap::fromImage(showimg));
     showpainter->end();
 }
 
+void MainWindow::drawpaint(QPainter *painter)
+{
+    if (cur_chartlist.chartlist.empty()) return;
+    for (int i=0;i<cur_chartlist.chartlist.size();i++)
+    {
+        QPoint p1=(drawchart(cur_chartlist.chartlist.at(i))).p1;
+        QPoint p2=(drawchart(cur_chartlist.chartlist.at(i))).p2;
+        painter->drawRect(p1.x(),p1.y(),p2.x()-p1.x(),p2.y()-p1.y());
+
+        float j1 = w_center + ((double)(p1.x())-ui->winshowimg->width()/2)/(((double)curScale)/100) / srcimgshort.cols;
+//        if (j1<0.01||j1>0.99) j1 =0.01;
+
+        float j2 = w_center + ((double)(p2.x())-ui->winshowimg->width()/2)/(((double)curScale)/100) / srcimgshort.cols;
+//        if (j2<0.01||j2>0.99) j2 =0.99;
+
+        float i1 = h_center + ((double)(p1.y())-ui->winshowimg->height()/2)/(((double)curScale)/100) / srcimgshort.rows;
+//        if (i1<0.01||i1>0.99) i1 =0.01;
+
+        float i2 = h_center + ((double)(p2.y())-ui->winshowimg->height()/2)/(((double)curScale)/100) / srcimgshort.rows;
+//        if (i2<0.01||i2>0.99) i2 =0.99;
+
+        int gray = 0;
+        int cnt = 0;
+
+        cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
+        double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
+        ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
+        levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
+        for (int i=i1*timg.rows;i<=i2*timg.rows;i++)
+        {
+            if (i<0||i>=timg.rows) continue;
+            for (int j=j1*timg.cols;j<=j2*timg.cols;j++)
+            {
+                if (j<0||j>=timg.cols) continue;
+                gray = float(gray*cnt)/(cnt+1)+float(timg(i,j))/(cnt+1);
+            }
+        }
+        painter->drawText(p1.x(),p1.y()-12,QString::number(gray));
+    }
+}
+
 bool MainWindow::eventFilter(QObject *target, QEvent *e)
 {
-    if (target == ui->winshowimg && !srcimgshort.empty() && !rgflag)
+    QMouseEvent* tev = static_cast<QMouseEvent*>(e);
+    if (rstatus == rsta_translation)
+    {
+        if (cur_chartlist.ifonrec(tev->pos()))
+        {
+            setCursor(Qt::SizeFDiagCursor);
+            oldchart = cur_chartlist.findonrec(tev->pos());
+        }
+        else if (cur_chartlist.ifonshape(tev->pos()))
+        {
+            setCursor(Qt::OpenHandCursor);
+            oldchart = cur_chartlist.findonshape(tev->pos());
+        }
+        else
+        {
+            setCursor(Qt::ArrowCursor);
+        }
+    }
+
+    if (target == ui->winshowimg && !srcimgshort.empty() && rstatus == rsta_translation)
     {
         if (e->type() == QEvent::MouseButtonPress)
         {
             QMouseEvent* ev = static_cast<QMouseEvent*>(e);
             if (ev->button()==Qt::LeftButton)
             {
+                if (cur_chartlist.ifonrec(tev->pos()))
+                {
+                    rstatus = rsta_changerect;
+                    stdrawpos = oldchart.p1;
+                    prepos = oldchart.p2;
+                    return true;
+                }
+                else if(cur_chartlist.ifonshape(tev->pos()))
+                {
+                    rstatus = rsta_dragrect;
+                    prepos = ev->pos();
+                    setCursor(Qt::ClosedHandCursor);
+                    return true;
+                }
                 scrollpos=ev->globalPos();
                 scrollclicked=true;
                 return true;
@@ -481,9 +620,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
                 inwhite = tinwhite;
                 double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
                 ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
-                cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-                levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
-                show_image(timg,1);
+                show_image(srcimgshort,1);
             }
 
         }
@@ -508,7 +645,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
             return true;
         }
     }
-    else if(target == ui->winshowimg && !srcimgshort.empty() && rgflag)
+    else if(target == ui->winshowimg && !srcimgshort.empty() && rstatus == rsta_mark)
     {
         if (e->type() == QEvent::MouseButtonPress)
         {
@@ -520,11 +657,12 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
             QMouseEvent* ev = static_cast<QMouseEvent*>(e);
             if (ev->button()==Qt::LeftButton)
             {
+                drawst=true;
                 rgstpos=ev->pos();
                 return true;
             }
         }
-        else if(e->type() == QEvent::MouseMove)
+        else if(e->type() == QEvent::MouseMove && drawst)
         {
 
             QMouseEvent* ev = static_cast<QMouseEvent*>(e);
@@ -536,7 +674,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
         }
         else if(e->type() == QEvent::MouseButtonRelease)
         {
-            rgflag=false;
+            rstatus = rsta_translation;
             setCursor(Qt::ArrowCursor);
 
             float strate = w_center+
@@ -577,8 +715,220 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
                 rgvector[i]=ttsum - rgvector[i];
             }
 
+            drawst=false;
             show_image(srcimgshort,0);
 
+        }
+    }
+    else if(target == ui->winshowimg && !srcimgshort.empty() && rstatus == rsta_drawrect)
+    {
+        if (e->type() == QEvent::MouseButtonPress)
+        {
+
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            if (ev->button()==Qt::RightButton)
+            {
+                rstatus = rsta_translation;
+                setCursor(Qt::ArrowCursor);
+            }
+            else if (ev->button()==Qt::LeftButton)
+            {
+                drawst=true;
+                stdrawpos = ev->pos();
+                pardraw = 10000;
+            }
+        }
+        else if (e->type() == QEvent::MouseMove && drawst )
+        {
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            QPoint tmp = ev->pos();
+            if (pardraw == 10000)
+            {
+                pardraw=0;
+                int x1,x2,y1,y2;
+                drawchart tmpc;
+
+                x1 = stdrawpos.x()<tmp.x()?stdrawpos.x():tmp.x();
+                x2 = stdrawpos.x()>tmp.x()?stdrawpos.x():tmp.x();
+                y1 = stdrawpos.y()<tmp.y()?stdrawpos.y():tmp.y();
+                y2 = stdrawpos.y()>tmp.y()?stdrawpos.y():tmp.y();
+
+                tmpc.p1.setX(x1);tmpc.p1.setY(y1);tmpc.p2.setX(x2);tmpc.p2.setY(y2);
+                cur_chartlist.insert(tmpc);
+
+            }
+
+            else
+            {
+
+
+                drawchart oldc,newc;
+                int x1,x2,y1,y2;
+                x1 = stdrawpos.x()<prepos.x()?stdrawpos.x():prepos.x();
+                x2 = stdrawpos.x()>prepos.x()?stdrawpos.x():prepos.x();
+                y1 = stdrawpos.y()<prepos.y()?stdrawpos.y():prepos.y();
+                y2 = stdrawpos.y()>prepos.y()?stdrawpos.y():prepos.y();
+                oldc.p1.setX(x1);oldc.p1.setY(y1);oldc.p2.setX(x2);oldc.p2.setY(y2);
+
+                x1 = stdrawpos.x()<tmp.x()?stdrawpos.x():tmp.x();
+                x2 = stdrawpos.x()>tmp.x()?stdrawpos.x():tmp.x();
+                y1 = stdrawpos.y()<tmp.y()?stdrawpos.y():tmp.y();
+                y2 = stdrawpos.y()>tmp.y()?stdrawpos.y():tmp.y();
+                newc.p1.setX(x1);newc.p1.setY(y1);newc.p2.setX(x2);newc.p2.setY(y2);
+
+                cur_chartlist.update(oldc,newc);
+            }
+
+            prepos=tmp;
+            show_image(srcimgshort,0);
+        }
+        else if(e->type() == QEvent::MouseButtonRelease)
+        {
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            QPoint tmp = ev->pos();
+            if (pardraw == 10000)
+            {
+                pardraw=0;
+                int x1,x2,y1,y2;
+                drawchart tmpc;
+
+                x1 = stdrawpos.x()<tmp.x()?stdrawpos.x():tmp.x();
+                x2 = stdrawpos.x()>tmp.x()?stdrawpos.x():tmp.x();
+                y1 = stdrawpos.y()<tmp.y()?stdrawpos.y():tmp.y();
+                y2 = stdrawpos.y()>tmp.y()?stdrawpos.y():tmp.y();
+
+                tmpc.p1.setX(x1);tmpc.p1.setY(y1);tmpc.p2.setX(x2);tmpc.p2.setY(y2);
+                cur_chartlist.insert(tmpc);
+
+            }
+
+            else
+            {
+
+                drawchart oldc,newc;
+                int x1,x2,y1,y2;
+                x1 = stdrawpos.x()<prepos.x()?stdrawpos.x():prepos.x();
+                x2 = stdrawpos.x()>prepos.x()?stdrawpos.x():prepos.x();
+                y1 = stdrawpos.y()<prepos.y()?stdrawpos.y():prepos.y();
+                y2 = stdrawpos.y()>prepos.y()?stdrawpos.y():prepos.y();
+                oldc.p1.setX(x1);oldc.p1.setY(y1);oldc.p2.setX(x2);oldc.p2.setY(y2);
+
+                x1 = stdrawpos.x()<tmp.x()?stdrawpos.x():tmp.x();
+                x2 = stdrawpos.x()>tmp.x()?stdrawpos.x():tmp.x();
+                y1 = stdrawpos.y()<tmp.y()?stdrawpos.y():tmp.y();
+                y2 = stdrawpos.y()>tmp.y()?stdrawpos.y():tmp.y();
+                newc.p1.setX(x1);newc.p1.setY(y1);newc.p2.setX(x2);newc.p2.setY(y2);
+
+                cur_chartlist.update(oldc,newc);
+            }
+
+            prepos=tmp;
+            show_image(srcimgshort,0);
+            drawst=false;
+            rstatus = rsta_translation;
+            setCursor(Qt::ArrowCursor);
+        }
+    }
+    else if(target == ui->winshowimg && !srcimgshort.empty() && rstatus == rsta_changerect)
+    {
+        if (e->type() == QEvent::MouseMove)
+        {
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            QPoint tmp = ev->pos();
+
+            drawchart oldc,newc;
+            int x1,x2,y1,y2;
+            x1 = stdrawpos.x()<prepos.x()?stdrawpos.x():prepos.x();
+            x2 = stdrawpos.x()>prepos.x()?stdrawpos.x():prepos.x();
+            y1 = stdrawpos.y()<prepos.y()?stdrawpos.y():prepos.y();
+            y2 = stdrawpos.y()>prepos.y()?stdrawpos.y():prepos.y();
+            oldc.p1.setX(x1);oldc.p1.setY(y1);oldc.p2.setX(x2);oldc.p2.setY(y2);
+
+            x1 = stdrawpos.x()<tmp.x()?stdrawpos.x():tmp.x();
+            x2 = stdrawpos.x()>tmp.x()?stdrawpos.x():tmp.x();
+            y1 = stdrawpos.y()<tmp.y()?stdrawpos.y():tmp.y();
+            y2 = stdrawpos.y()>tmp.y()?stdrawpos.y():tmp.y();
+            newc.p1.setX(x1);newc.p1.setY(y1);newc.p2.setX(x2);newc.p2.setY(y2);
+
+            cur_chartlist.update(oldc,newc);
+
+            prepos=tmp;
+            show_image(srcimgshort,0);
+        }
+        else if(e->type() == QEvent::MouseButtonRelease)
+        {
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            QPoint tmp = ev->pos();
+
+            drawchart oldc,newc;
+            int x1,x2,y1,y2;
+            x1 = stdrawpos.x()<prepos.x()?stdrawpos.x():prepos.x();
+            x2 = stdrawpos.x()>prepos.x()?stdrawpos.x():prepos.x();
+            y1 = stdrawpos.y()<prepos.y()?stdrawpos.y():prepos.y();
+            y2 = stdrawpos.y()>prepos.y()?stdrawpos.y():prepos.y();
+            oldc.p1.setX(x1);oldc.p1.setY(y1);oldc.p2.setX(x2);oldc.p2.setY(y2);
+
+            x1 = stdrawpos.x()<tmp.x()?stdrawpos.x():tmp.x();
+            x2 = stdrawpos.x()>tmp.x()?stdrawpos.x():tmp.x();
+            y1 = stdrawpos.y()<tmp.y()?stdrawpos.y():tmp.y();
+            y2 = stdrawpos.y()>tmp.y()?stdrawpos.y():tmp.y();
+            newc.p1.setX(x1);newc.p1.setY(y1);newc.p2.setX(x2);newc.p2.setY(y2);
+
+            cur_chartlist.update(oldc,newc);
+
+            prepos=tmp;
+            show_image(srcimgshort,0);
+            rstatus = rsta_translation;
+        }
+    }
+    else if(target == ui->winshowimg && !srcimgshort.empty() && rstatus == rsta_dragrect)
+    {
+        if (e->type() == QEvent::MouseMove)
+        {
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            QPoint tmp = ev->pos();
+
+            drawchart newc;
+            int x1,x2,y1,y2;
+            int dx = tmp.x() - prepos.x();
+            int dy = tmp.y() - prepos.y();
+            prepos = tmp;
+
+            x1 = oldchart.p1.x()+dx;
+            x2 = oldchart.p2.x()+dx;
+            y1 = oldchart.p1.y()+dy;
+            y2 = oldchart.p2.y()+dy;
+            newc.p1.setX(x1);newc.p1.setY(y1);newc.p2.setX(x2);newc.p2.setY(y2);
+
+            cur_chartlist.update(oldchart,newc);
+            oldchart = newc;
+
+            prepos=tmp;
+            show_image(srcimgshort,0);
+        }
+        else if(e->type() == QEvent::MouseButtonRelease)
+        {
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            QPoint tmp = ev->pos();
+
+            drawchart newc;
+            int x1,x2,y1,y2;
+            int dx = tmp.x() - prepos.x();
+            int dy = tmp.y() - prepos.y();
+            prepos = tmp;
+
+            x1 = oldchart.p1.x()+dx;
+            x2 = oldchart.p2.x()+dx;
+            y1 = oldchart.p1.y()+dy;
+            y2 = oldchart.p2.y()+dy;
+            newc.p1.setX(x1);newc.p1.setY(y1);newc.p2.setX(x2);newc.p2.setY(y2);
+
+            cur_chartlist.update(oldchart,newc);
+            oldchart = newc;
+
+            prepos=tmp;
+            show_image(srcimgshort,0);
+            rstatus = rsta_translation;
         }
     }
 
@@ -595,7 +945,7 @@ void MainWindow::enableaction()
     ui->turn_horizontal->setEnabled(true);
     ui->turn_vertical->setEnabled(true);
     ui->invert->setEnabled(true);
-    //ui->back->setEnabled(true);
+    ui->back->setEnabled(true);
     ui->hdr->setEnabled(true);
     ui->localadaptive_hdr->setEnabled(true);
     ui->hist_hdr->setEnabled(true);
@@ -605,6 +955,8 @@ void MainWindow::enableaction()
     ui->contrast->setEnabled(true);
     ui->denoise->setEnabled(true);
     ui->rgradation->setEnabled(true);
+    ui->drawrect->setEnabled(true);
+    ui->resetdraw->setEnabled(true);
     pRate->setEnabled(true);
 }
 void MainWindow::disableaction()
@@ -626,6 +978,8 @@ void MainWindow::disableaction()
     ui->contrast->setEnabled(false);
     ui->denoise->setEnabled(false);
     ui->rgradation->setEnabled(false);
+    ui->drawrect->setEnabled(false);
+    ui->resetdraw->setEnabled(false);
     pRate->setEnabled(false);
 }
 
@@ -723,6 +1077,9 @@ void MainWindow::on_imagelist_currentItemChanged(QListWidgetItem *current, QList
 //type=1,列表第一个，打开并显示，type=0，只在列表里显示，type=2，列表切换显示大图
 void MainWindow::openfile(QString filename, int type)
 {
+    bool nullflag = false;
+    if (srcimgshort.empty()) nullflag=true;
+
     if (type!=2)
     {
         for ( vector<QString>::iterator it = filelist.begin();it<filelist.end();it++)
@@ -740,6 +1097,7 @@ void MainWindow::openfile(QString filename, int type)
         else
         {
             industry_db.insert_imageitem(cur_item);
+            refresh_dataset();
         }
     }
 
@@ -800,11 +1158,13 @@ void MainWindow::openfile(QString filename, int type)
     {
         label_loc_ptr[0]=1;label_loc_ptr[1]=2;label_loc_ptr[2]=3;label_loc_ptr[3]=0;
         srcimgshort=cv::Mat(srcimgshort_temp.cols,srcimgshort_temp.rows,CV_16UC1);
+        raw_srcimgshort=cv::Mat(srcimgshort_temp.cols,srcimgshort_temp.rows,CV_16UC1);
         for (int i=0;i<srcimgshort_temp.rows;i++)
         {
             for (int j=0;j<srcimgshort_temp.cols;j++)
             {
                 srcimgshort(srcimgshort_temp.cols-1-j,i)=srcimgshort_temp(i,j);
+                raw_srcimgshort(srcimgshort_temp.cols-1-j,i)=srcimgshort_temp(i,j);
             }
         }
         srcimgshort_temp.release();
@@ -813,6 +1173,8 @@ void MainWindow::openfile(QString filename, int type)
     {
         label_loc_ptr[0]=0;label_loc_ptr[1]=1;label_loc_ptr[2]=2;label_loc_ptr[3]=3;
         srcimgshort = srcimgshort_temp;
+        raw_srcimgshort=cv::Mat(srcimgshort_temp.cols,srcimgshort_temp.rows,CV_16UC1);
+        srcimgshort.copyTo(raw_srcimgshort);
     }
 
     if (type == 1 || type == 2)
@@ -828,15 +1190,17 @@ void MainWindow::openfile(QString filename, int type)
             QDate date;
             dt.setTime(time.currentTime());
             dt.setDate(date.currentDate());
-            cur_item.date=dt.toString("yyyy-MM-dd-hh-mm-ss");
+            cur_item.date=dt.toString("yyyy/MM/dd hh:mm:ss");
 
             cur_item.id = "tmp";
-            cur_item.operation = "tmp";
+            cur_item.operation = "";
+            cur_item.chart = "";
+            update_chartlist(cur_item.chart);
         }
         else
         {
-
-
+            srcimgshort=parse_operationstr(cur_item.operation, srcimgshort);
+            update_chartlist(cur_item.chart);
         }
 
     }
@@ -852,7 +1216,15 @@ void MainWindow::openfile(QString filename, int type)
 
     if (type==0||type==1)
     {
-        QImage tshowimage=mat2qimage(srcimgchar);
+        cv::Mat_<uchar> tcharimg = cv::Mat(raw_srcimgshort.rows, raw_srcimgshort.cols, CV_8UC1);
+        for (int i=0;i<raw_srcimgshort.rows;i++)
+        {
+            for (int j=0;j<raw_srcimgshort.cols;j++)
+            {
+                tcharimg(i,j)=unsigned char(double(raw_srcimgshort(i,j))/65535*255);
+            }
+        }
+        QImage tshowimage=mat2qimage(tcharimg);
         QImage timage=tshowimage.scaled(ui->imagelist->width()-5,ui->imagelist->height(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
         filelist.push_back(filename);
 
@@ -917,13 +1289,18 @@ void MainWindow::openfile(QString filename, int type)
             slidermin=0.5*sliderpos;
             slidermax=200;
         }
+        if (nullflag)
+        {
+            reset();
+            curScale = sliderpos;
+            h_center=0.5;
+            w_center=0.5;
+        }
+        if (curScale>slidermax) curScale=slidermax;
         maxScale = slidermax;
         minScale = slidermin;
-        curScale = sliderpos;
-        pRate->setValidator(new QIntValidator(slidermin, slidermax));
 
-        h_center=0.5;
-        w_center=0.5;
+        pRate->setValidator(new QIntValidator(slidermin, slidermax));
 
         show_image(srcimgshort,1);
 
@@ -934,11 +1311,47 @@ void MainWindow::openfile(QString filename, int type)
         ui->winshowimg->setGraphicsEffect(e1);
     }
 
-    reset();
-    backup.clear();
-    ui->back->setEnabled(false);
+}
 
+//解析图形串
+//$0:x1,y1,x2,y2
+void MainWindow::update_chartlist(QString chart)
+{
+    cur_chartlist.clear();
+    QStringList charts = chart.split('$');
+    for (int i=0;i<charts.size();i++)
+    {
+        QString cur_chartchar = charts.at(i);
+        QString type = cur_chartchar.split(':').first();
+        if (type=="0")
+        {
+            QString nums = cur_chartchar.split(':').back();
+            drawchart tmpchar;
+            QString tmp;
+            tmp = nums.split(',').at(0);
+            tmpchar.p1.setX(tmp.toInt());
+            tmp = nums.split(',').at(1);
+            tmpchar.p1.setY(tmp.toInt());
+            tmp = nums.split(',').at(2);
+            tmpchar.p2.setX(tmp.toInt());
+            tmp = nums.split(',').at(3);
+            tmpchar.p2.setY(tmp.toInt());
 
+            cur_chartlist.insert(tmpchar);
+        }
+    }
+}
+
+void MainWindow::on_drawrect_triggered()
+{
+    rstatus = rsta_drawrect;
+    setCursor(Qt::CrossCursor);
+}
+
+void MainWindow::on_resetdraw_triggered()
+{
+    cur_chartlist.clear();
+    show_image(srcimgshort,0);
 }
 
 //打开文件
@@ -960,17 +1373,15 @@ void MainWindow::on_openfile_triggered()
     }
 }
 
-void MainWindow::setCurScale(int scale){
+void MainWindow::setCurScale(int scale)
+{
     scale = scale>minScale?scale:minScale;
     scale = scale<maxScale?scale:maxScale;
-    if(curScale != scale){
+    if(curScale != scale)
+    {
         curScale = scale;
         settext(QString::number(curScale));
-        double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
-        ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
-        cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-        levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
-        show_image(timg,1);
+        show_image(srcimgshort,1);
     }
 }
 
@@ -991,18 +1402,25 @@ void MainWindow::on_hist_triggered()
     if (srcimgshort.empty()) return;
     w1=new c_gradation();
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
-    QObject::connect(this,SIGNAL(s_imageshort(cv::Mat_<unsigned short>)),w1,SLOT(r_imageshort(cv::Mat_<unsigned short>)));
-    QObject::connect(w1,SIGNAL(s_imagechar(cv::Mat_<unsigned char>)),this,SLOT(r_imagechar(cv::Mat_<unsigned char>)));
+    QObject::connect(this,SIGNAL(s_imageshort_hist(cv::Mat_<unsigned short>,unsigned short,unsigned short,unsigned short,unsigned short,unsigned short))
+                     ,w1,SLOT(r_imageshort_hist(cv::Mat_<unsigned short>,unsigned short,unsigned short,unsigned short,unsigned short,unsigned short)));
     QObject::connect(w1,SIGNAL(s_cancel()),this,SLOT(r_cancel()));
-    QObject::connect(w1,SIGNAL(s_ok(cv::Mat_<unsigned short>)),this,SLOT(r_ok(cv::Mat_<unsigned short>)));
+    QObject::connect(w1,SIGNAL(s_ok_hist(unsigned short,unsigned short,unsigned short,unsigned short,unsigned short)),this,
+                     SLOT(r_ok_hist(unsigned short,unsigned short,unsigned short,unsigned short,unsigned short)));
     QObject::connect(this,SIGNAL(s_hist(cv::Mat_<unsigned char>)),w1,SLOT(r_hist(cv::Mat_<unsigned char>)));
-    QObject::connect(w1,SIGNAL(s_imageshort(cv::Mat_<unsigned short>)),this,SLOT(r_imageshort(cv::Mat_<unsigned short>)));
+    QObject::connect(w1,SIGNAL(s_imageshort(cv::Mat_<unsigned short>)),this,SLOT(r_imageshort_cgra(cv::Mat_<unsigned short>)));
 
-    cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-    levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
+    emit s_imageshort_hist(srcimgshort,indark,ingray,inwhite,outdark,outwhite);
 
-    emit s_imageshort(timg);
-    emit s_hist(srcimgchar);
+    cv::Mat_<unsigned char> timg = cv::Mat(raw_srcimgshort.rows,raw_srcimgshort.cols,CV_8UC1);
+    for (int i=0;i<raw_srcimgshort.rows;i++)
+    {
+        for (int j=0;j<raw_srcimgshort.cols;j++)
+        {
+            timg(i,j) = unsigned char(double(raw_srcimgshort(i,j))/65535*255);
+        }
+    }
+    emit s_hist(timg);
     w1->setWindowTitle(QString::fromLocal8Bit("色阶调整"));
     w1->setWindowFlags(Qt::WindowCloseButtonHint);
     w1->setGeometry(x()+100,y()+100,491,389);
@@ -1019,12 +1437,9 @@ void MainWindow::on_hist_hdr_triggered()
     QObject::connect(this,SIGNAL(s_imageshort(cv::Mat_<unsigned short>)),w2,SLOT(r_imageshort(cv::Mat_<unsigned short>)));
     QObject::connect(w2,SIGNAL(s_imagechar(cv::Mat_<unsigned char>)),this,SLOT(r_imagechar(cv::Mat_<unsigned char>)));
     QObject::connect(w2,SIGNAL(s_cancel()),this,SLOT(r_cancel()));
-    QObject::connect(w2,SIGNAL(s_ok(cv::Mat_<unsigned short>)),this,SLOT(r_ok(cv::Mat_<unsigned short>)));
+//    QObject::connect(w2,SIGNAL(s_ok(cv::Mat_<unsigned short>)),this,SLOT(r_ok(cv::Mat_<unsigned short>)));
 
-    cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-    levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
-
-    emit s_imageshort(timg);
+    emit s_imageshort(srcimgshort);
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
     w2->setWindowTitle(QString::fromLocal8Bit("直方图均衡化HDR调整"));
     w2->setWindowFlags(Qt::WindowCloseButtonHint);
@@ -1041,13 +1456,11 @@ void MainWindow::on_localadaptive_hdr_triggered()
     QObject::connect(this,SIGNAL(s_imageshort(cv::Mat_<unsigned short>)),w3,SLOT(r_imageshort(cv::Mat_<unsigned short>)));
     QObject::connect(w3,SIGNAL(s_imagechar(cv::Mat_<unsigned char>)),this,SLOT(r_imagechar(cv::Mat_<unsigned char>)));
     QObject::connect(w3,SIGNAL(s_cancel()),this,SLOT(r_cancel()));
-    QObject::connect(w3,SIGNAL(s_ok(cv::Mat_<unsigned short>)),this,SLOT(r_ok(cv::Mat_<unsigned short>)));
-    QObject::connect(w3,SIGNAL(s_dst(cv::Mat)),this,SLOT(r_lhdr_dst(cv::Mat)));
+//    QObject::connect(w3,SIGNAL(s_ok(cv::Mat_<unsigned short>)),this,SLOT(r_ok(cv::Mat_<unsigned short>)));
 
-    cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-    levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
 
-    emit s_imageshort(timg);
+
+    emit s_imageshort(srcimgshort);
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
     w3->setWindowTitle(QString::fromLocal8Bit("局部适应HDR调整"));
     w3->setWindowFlags(Qt::WindowCloseButtonHint);
@@ -1064,15 +1477,11 @@ void MainWindow::on_contrast_triggered()
     if (srcimgshort.empty()) return;
     w_contrast=new ui_contrast();
     QObject::connect(this,SIGNAL(s_imageshort(cv::Mat_<unsigned short>)),w_contrast,SLOT(r_imageshort(cv::Mat_<unsigned short>)));
-    QObject::connect(w_contrast,SIGNAL(s_imagechar(cv::Mat_<unsigned char>)),this,SLOT(r_imagechar(cv::Mat_<unsigned char>)));
     QObject::connect(w_contrast,SIGNAL(s_cancel()),this,SLOT(r_cancel()));
-    QObject::connect(w_contrast,SIGNAL(s_ok(cv::Mat_<unsigned short>)),this,SLOT(r_ok(cv::Mat_<unsigned short>)));
+    QObject::connect(w_contrast,SIGNAL(s_ok(cv::Mat_<unsigned short>,QString)),this,SLOT(r_ok(cv::Mat_<unsigned short>,QString)));
     QObject::connect(w_contrast,SIGNAL(s_imageshort(cv::Mat_<unsigned short>)),this,SLOT(r_imageshort(cv::Mat_<unsigned short>)));
 
-    cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-    levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
-
-    emit s_imageshort(timg);
+    emit s_imageshort(srcimgshort);
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
     w_contrast->setWindowTitle(QString::fromLocal8Bit("对比度调整"));
     w_contrast->setWindowFlags(Qt::WindowCloseButtonHint);
@@ -1111,9 +1520,6 @@ void MainWindow::on_denoise_triggered()
         backup.push_back(srcimgshort-0);
     }
 
-
-    levelAdjustment(srcimgshort,srcimgshort,indark,ingray,inwhite,outdark,outwhite);
-
     cv::Mat temp=cv::Mat(srcimgshort.size(),CV_32F);
     for (int i=0;i<srcimgshort.rows;i++)
     {
@@ -1132,12 +1538,11 @@ void MainWindow::on_denoise_triggered()
     double d1,d2;
     cv::Mat div=temp-temp1;
     cv::minMaxIdx(div,&d1,&d2);
-    float t=temp1.at<float>(0,0);
+//    float t=temp1.at<float>(0,0);
     temp1.convertTo(srcimgshort,CV_16UC1);
     show_image(srcimgshort,1);
     emit(s_number(100));
 
-    reset();
 
 
 }
@@ -1187,47 +1592,26 @@ void MainWindow::on_about_triggered()
 //触发正负片按钮
 void MainWindow::on_invert_triggered()
 {
-    if(!ui->invert->isEnabled())
-        return;
+    if(srcimgshort.empty())  return;
     ui->back->setEnabled(true);
-    if ((int)backup.size()<maxback)
-    {
-        backup.push_back(srcimgshort-0);
-    }
-    else
-    {
-        backup.pop_front();
-        backup.push_back(srcimgshort-0);
-    }
 
-    cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-    levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
-
-    srcimgshort=65535-timg;
+    ifinvert=!ifinvert;
 
     show_image(srcimgshort,1);
 
-    reset();
+    cur_item.operation+="$0:";
+
 }
 //触发水平翻转按钮
 void MainWindow::on_turn_horizontal_triggered()
 {
-    if(!ui->turn_horizontal->isEnabled())
-        return;
+    if(srcimgshort.empty()) return;
     ui->back->setEnabled(true);
-    if ((int)backup.size()<maxback)
-    {
-        backup.push_back(srcimgshort-0);
-    }
-    else
-    {
-        backup.pop_front();
-        backup.push_back(srcimgshort-0);
-    }
+
     int w=srcimgshort.cols;
     int h=srcimgshort.rows;
     cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-    levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
+    srcimgshort.copyTo(timg);
     for (int i=0;i<timg.rows;i++)
     {
         for (int j=0;j<timg.cols;j++)
@@ -1240,29 +1624,20 @@ void MainWindow::on_turn_horizontal_triggered()
     int tmplabel = label_loc_ptr[0];
     label_loc_ptr[0] = label_loc_ptr[2];
     label_loc_ptr[2] = tmplabel;
-    show_image(srcimgshort);
-
-    reset();
+    show_image(srcimgshort,1);
+    cur_item.operation+="$1:";
 }
+
 //触发竖直翻转按钮
 void MainWindow::on_turn_vertical_triggered()
 {
-    if(!ui->turn_vertical->isEnabled())
-        return;
+    if(srcimgshort.empty()) return;
     ui->back->setEnabled(true);
-    if ((int)backup.size()<maxback)
-    {
-        backup.push_back(srcimgshort-0);
-    }
-    else
-    {
-        backup.pop_front();
-        backup.push_back(srcimgshort-0);
-    }
+
     int w=srcimgshort.cols;
     int h=srcimgshort.rows;
     cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-    levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
+    srcimgshort.copyTo(timg);
     for (int i=0;i<timg.rows;i++)
     {
         for (int j=0;j<timg.cols;j++)
@@ -1273,118 +1648,21 @@ void MainWindow::on_turn_vertical_triggered()
     int tmplabel = label_loc_ptr[1];
     label_loc_ptr[1] = label_loc_ptr[3];
     label_loc_ptr[3] = tmplabel;
-    show_image(srcimgshort);
-
-    reset();
+    show_image(srcimgshort,1);
+    cur_item.operation+="$2:";
 }
 //接收到处理完图片的槽函数
 void MainWindow::r_imagechar(cv::Mat_<unsigned char> img)
 {
-
-    int height = ((double)curScale)/100*img.rows;
-    int width = ((double)curScale)/100*img.cols;
-    double rate = ((double)curScale)/100;
-    if(!cvtsrcimgchar.empty()) cvtsrcimgchar.release();
-    cv::Mat tmp;
-    cv::resize(img,tmp,cv::Size(width,height),rate,rate,CV_INTER_AREA);
-    tmp.copyTo(cvtsrcimgchar);
-
-
-    cv::Mat_<unsigned char> matshowimg = cvCreateMat(ui->winshowimg->size().height(),ui->winshowimg->size().width(),CV_8UC1);
-    for (int i=0;i<matshowimg.rows;i++)
+    cv::Mat_<ushort> timg = cv::Mat(img.rows,img.cols,CV_16UC1);
+    for (int i=0;i<img.rows;i++)
     {
-        for (int j=0;j<matshowimg.cols;j++)
+        for (int j=0;j<img.cols;j++)
         {
-            int ppi = h_center*cvtsrcimgchar.rows+i-matshowimg.rows/2;
-            int ppj = w_center*cvtsrcimgchar.cols+j-matshowimg.cols/2;
-            if (ppi<0 || ppj<0 || ppi>=cvtsrcimgchar.rows || ppj>=cvtsrcimgchar.cols)
-            {
-                matshowimg(i,j)=46;
-            }
-            else matshowimg(i,j)= cvtsrcimgchar(ppi,ppj);
+            timg(i,j) = img(i,j)*255;
         }
     }
-    showimg=mat2qimage(matshowimg,0);
-    showimg=showimg.convertToFormat(QImage::Format_ARGB32);
-
-    QPainter* showpainter = new QPainter(&showimg);
-    showpainter->setCompositionMode(QPainter::CompositionMode_SourceIn);
-    //设置画刷的组合模式CompositionMode_SourceOut这个模式为目标图像在上。
-
-    //改变画笔和字体
-    QPen pen = showpainter->pen();
-    pen.setColor(Qt::white);
-    QFont font = showpainter->font();
-    font.setBold(true);//加粗
-    font.setPixelSize(20);//改变字体大小
-
-    showpainter->setPen(pen);
-    showpainter->setFont(font);
-
-    showpainter->drawText(20,showimg.height()/2,label_loc[label_loc_ptr[0]]);
-    showpainter->drawText(showimg.width()/2,20,label_loc[label_loc_ptr[1]]);
-    showpainter->drawText(showimg.width()-50,showimg.height()/2,label_loc[label_loc_ptr[2]]);
-    showpainter->drawText(showimg.width()/2,showimg.height()-20,label_loc[label_loc_ptr[3]]);
-
-
-    ui->winshowimg->setPixmap(QPixmap::fromImage(showimg));
-    showpainter->end();
-}
-
-void MainWindow::r_lhdr_dst(cv::Mat a)
-{
-    cv::Mat_<unsigned char> img;
-    a.convertTo(img, CV_8UC1, 255);
-    int height = ((double)curScale)/100*img.rows;
-    int width = ((double)curScale)/100*img.cols;
-    double rate = ((double)curScale)/100;
-    if(!cvtsrcimgchar.empty()) cvtsrcimgchar.release();
-    cv::Mat tmp;
-    cv::resize(img,tmp,cv::Size(width,height),rate,rate,CV_INTER_AREA);
-    tmp.copyTo(cvtsrcimgchar);
-
-
-    cv::Mat_<unsigned char> matshowimg = cvCreateMat(ui->winshowimg->size().height(),ui->winshowimg->size().width(),CV_8UC1);
-    for (int i=0;i<matshowimg.rows;i++)
-    {
-        for (int j=0;j<matshowimg.cols;j++)
-        {
-            int ppi = h_center*cvtsrcimgchar.rows+i-matshowimg.rows/2;
-            int ppj = w_center*cvtsrcimgchar.cols+j-matshowimg.cols/2;
-            if (ppi<0 || ppj<0 || ppi>=cvtsrcimgchar.rows || ppj>=cvtsrcimgchar.cols)
-            {
-                matshowimg(i,j)=46;
-            }
-            else matshowimg(i,j)= cvtsrcimgchar(ppi,ppj);
-        }
-    }
-    showimg=mat2qimage(matshowimg,0);
-
-    showimg=showimg.convertToFormat(QImage::Format_ARGB32);
-
-    QPainter* showpainter = new QPainter(&showimg);
-    showpainter->setCompositionMode(QPainter::CompositionMode_SourceIn);
-    //设置画刷的组合模式CompositionMode_SourceOut这个模式为目标图像在上。
-
-    //改变画笔和字体
-    QPen pen = showpainter->pen();
-    pen.setColor(Qt::white);
-    QFont font = showpainter->font();
-    font.setBold(true);//加粗
-    font.setPixelSize(20);//改变字体大小
-
-    showpainter->setPen(pen);
-    showpainter->setFont(font);
-
-    showpainter->drawText(20,showimg.height()/2,label_loc[label_loc_ptr[0]]);
-    showpainter->drawText(showimg.width()/2,20,label_loc[label_loc_ptr[1]]);
-    showpainter->drawText(showimg.width()-50,showimg.height()/2,label_loc[label_loc_ptr[2]]);
-    showpainter->drawText(showimg.width()/2,showimg.height()-20,label_loc[label_loc_ptr[3]]);
-
-
-    ui->winshowimg->setPixmap(QPixmap::fromImage(showimg));
-    showpainter->end();
-
+    show_image(timg,1);
 }
 
 //16位
@@ -1393,65 +1671,52 @@ void MainWindow::r_imageshort(cv::Mat_<unsigned short> img)
     show_image(img,1);
 }
 
+//16位
+void MainWindow::r_imageshort_cgra(cv::Mat_<unsigned short> img)
+{
+    show_image(img,1,false);
+}
+
 //处理取消，还原
 void MainWindow::r_cancel()
 {
-    cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-    levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
-    show_image(timg,1);
-
-}
-//处理确认，变更
-void MainWindow::r_ok(cv::Mat_<unsigned short> a)
-{
-    ui->back->setEnabled(true);
-    if ((int)backup.size() < maxback)
-    {
-        backup.push_back(srcimgshort);
-    }
-    else
-    {
-        backup.pop_front();
-        backup.push_back(srcimgshort);
-    }
-    srcimgshort=a;
-    for (int i=0;i<srcimgshort.rows;i++)
-    {
-        for (int j=0;j<srcimgshort.cols;j++)
-        {
-            srcimgchar(i,j)=unsigned char(double(srcimgshort(i,j))/65535*255);
-        }
-    }
-
-    reset();
     show_image(srcimgshort,1);
 }
+
+//调整色阶处理确认，变更
+void MainWindow::r_ok_hist(unsigned short tindark, unsigned short tingray, unsigned short tinwhite, unsigned short toutdark, unsigned short toutwhite)
+{
+    indark = tindark;
+    ingray=tingray;
+    inwhite=tinwhite;
+    outdark=toutdark;
+    outwhite=toutwhite;
+
+    show_image(srcimgshort,1);
+
+}
+
+//处理确认，变更
+void MainWindow::r_ok(cv::Mat_<unsigned short> a,QString opt)
+{
+    ui->back->setEnabled(true);
+    srcimgshort=a;
+    show_image(srcimgshort,1);
+    cur_item.operation+=opt;
+}
+
 //回退申请
 void MainWindow::on_back_triggered()
 {
-    if(!ui->back->isEnabled())
-        return;
-    if (backup.empty()) return;
-
-    srcimgshort=backup.back();
-    backup.pop_back();
-    if (backup.empty())
-    {
-        ui->back->setEnabled(false);
-    }
-    if (srcimgshort.empty())
-    {
-        ui->winshowimg->clear();
-    }
+    if (srcimgshort.empty()) return;
     else
     {
-
+        cur_item.operation="";
+        raw_srcimgshort.copyTo(srcimgshort);
         show_image(srcimgshort,1);
-
-        reset();
     }
-
 }
+
 void MainWindow::on_exit_triggered()
 {
     this->close();
@@ -1480,23 +1745,13 @@ void MainWindow::on_zoom_triggered()
 
 void MainWindow::on_mark_triggered()
 {
-    rgflag=true;
+    rstatus = rsta_mark;
     setCursor(Qt::CrossCursor);
 }
 
 void MainWindow::on_removegrade_triggered()
 {
     ui->back->setEnabled(true);
-    if ((int)backup.size() < maxback)
-    {
-        backup.push_back(srcimgshort-0);
-    }
-    else
-    {
-        backup.pop_front();
-        backup.push_back(srcimgshort-0);
-    }
-
     if (rgvector!=NULL && srcimgshort.rows==vectornum)
     {
         for (int i=0;i<srcimgshort.rows;i++)
@@ -1507,9 +1762,9 @@ void MainWindow::on_removegrade_triggered()
             }
         }
     }
-    double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
-    ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
-    cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-    levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
-    show_image(timg,1);
+
+    show_image(srcimgshort,1);
 }
+
+
+

@@ -27,7 +27,7 @@ public:
     void getparent(QWidget *pp);
 
 private slots:
-    void r_imageshort(cv::Mat_<unsigned short> a);
+    void r_imageshort_hist(cv::Mat_<unsigned short> a,unsigned short indark,unsigned short ingray,unsigned short inwhite,unsigned short outdark, unsigned short outwhite);
 
     void on_b_cancel_clicked();
 
@@ -56,10 +56,9 @@ private slots:
     void on_inw_poschanged(int num);
 
 signals:
-   void s_imagechar(cv::Mat_<unsigned char>);
    void s_imageshort(cv::Mat_<unsigned short>);
    void s_cancel();
-   void s_ok(cv::Mat_<unsigned short>);
+   void s_ok_hist(unsigned short indark,unsigned short ingray,unsigned short inwhite,unsigned short outdark, unsigned short outwhite);
 protected:
    void closeEvent(QCloseEvent *);
 private:

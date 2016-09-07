@@ -513,6 +513,8 @@ QPushButton {width:30px;height:30px;}</string>
     </widget>
     <addaction name="invert"/>
     <addaction name="turn"/>
+    <addaction name="drawrect"/>
+    <addaction name="resetdraw"/>
     <addaction name="back"/>
    </widget>
    <widget class="QMenu" name="menu">
@@ -803,6 +805,22 @@ QPushButton {width:30px;height:30px;}</string>
   <action name="removegrade">
    <property name="text">
     <string>去除阶梯</string>
+   </property>
+  </action>
+  <action name="drawrect">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>监视矩形</string>
+   </property>
+  </action>
+  <action name="resetdraw">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>重置绘图</string>
    </property>
   </action>
  </widget>

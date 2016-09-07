@@ -111,7 +111,8 @@ void ui_contrast::on_lineEdit_editingFinished()
 
 void ui_contrast::on_ok_button_clicked()
 {
-    emit s_ok(outputimg);
+    QString opt = "$4:"+QString::number(ui->level->value());
+    emit s_ok(outputimg,opt);
     this->close();
 }
 
