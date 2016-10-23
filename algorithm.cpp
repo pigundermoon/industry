@@ -2,7 +2,7 @@
 #include "ui_hist_hdr.h"
 
 
-extern bool ifinvert=false;
+extern bool ifinvert = false;
 
 //水平翻转
 Mat_<unsigned short> turn_horizonal(Mat_<unsigned short> img)
@@ -93,9 +93,169 @@ void tcontrast(Mat_<unsigned short> & input, Mat_<unsigned short> & output, int 
 }
 
 
+//错切变换
+extern void homotransfer(Mat_<unsigned short> & s, float degree)
+{
+    qDebug("%f\n",degree);
+    if (degree<=-90 || degree>=90) return ;
+    Mat_<unsigned  short> src;
+    if (s.rows<s.cols)
+    {
+        src = Mat_<unsigned short>(s.cols,s.rows,CV_16UC1);
+        for (int i=0;i<src.rows;i++)
+        {
+            for (int j=0; j < src.cols; j++)
+            {
+                src(i,j) = s(s.rows-j-1,i);
+            }
+        }
+    }
+    else
+    {
+        src =s;
+    }
+    Point2f srctri[3];
+    Point2f dsttri[3];
+
+    srctri[0] = Point2f(0,0);
+    srctri[1] = Point2f(src.cols/3,0);
+    srctri[2] = Point2f(src.cols/2,src.rows/2);
+
+    dsttri[0] = Point2f(0,0);
+    dsttri[1] = Point2f(src.cols/3,(src.cols/3)*tan(degree/180*3.14));
+    dsttri[2] = Point2f(src.cols/2,src.rows/2+((src.cols/2)*tan(degree/180*3.14)));
+
+    Mat warp_mat( 2, 3, CV_32FC1 );
+    warp_mat = getAffineTransform( srctri, dsttri);
+    warpAffine( src, src, warp_mat, src.size() );
+
+    if (s.rows<s.cols)
+    {
+        for (int i=0;i<src.rows;i++)
+        {
+            for (int j=0; j < src.cols; j++)
+            {
+                s(s.rows-j-1,i) = src(i,j);
+            }
+        }
+    }
+}
+
+
+//浮雕化
+extern void emboss(Mat_<unsigned short> &s, int dis, int range)
+{
+    if (dis<1) dis=1;
+    if (dis>10) dis=10;
+    if (range <1) range =1;
+    if (range >500) range =500;
+
+    Mat_<int> timg = Mat(s.rows,s.cols,CV_32SC1);
+    for (int i=0;i<s.rows;i++)
+    {
+        for (int j=0;j<s.cols;j++)
+        {
+            if (i-dis/2>=0 && j-dis/2>=0 && i+dis-dis/2<s.rows && j+dis-dis/2<s.cols)
+            {
+                timg(i,j) = (int)s(i+dis-dis/2,j+dis-dis/2)-(int)s(i-dis/2,j-dis/2);
+            }
+            else
+            {
+                timg(i,j) = 0;
+            }
+            timg(i,j)=(timg(i,j)*float(range)/100+65535)/2;
+        }
+    }
+    for (int i=0;i<s.rows;i++)
+    {
+        for (int j=0;j<s.cols;j++)
+        {
+            if (timg(i,j)>65535) timg(i,j) = 65535;
+            if (timg(i,j)<0) timg(i,j) = 0;
+            if (s(i,j)<=32768) s(i,j) = (timg(i,j)*s(i,j))/32768;
+            else s(i,j) = 65535 - (65535 - timg(i,j))*(65535 - s(i,j))/32768;
+        }
+    }
+}
+
+
+void rawfile::readfile(QString filepath)
+{
+    QString fullfilename = filepath.split('\\').back();
+    QString filename = fullfilename.split('.').first();
+    scanid = fullfilename.split('_').first();
+    QString wandh = filename.split('_').back();
+    width = QString(wandh.split('x').first()).toInt();
+    height = QString(wandh.split('x').back()).toInt();
+
+
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+    QByteArray ba = filepath.toLocal8Bit();
+    ifstream rfile(ba.data(),ios::binary);
+
+    long long size = width*height*2;
+    char *buffer = new char[size];
+    img = cv::Mat_<unsigned short>(height,width,CV_16UC1);
+    rfile.read(buffer,size);
+    unsigned short *pimg = (unsigned short*) buffer;
+    for (int i=0;i<height;i++)
+    {
+        for (int j=0;j<width;j++)
+        {
+            img(i,j) = 65535 - pimg[i*width+j];
+        }
+    }
+    rfile.close();
+}
+
+void rawfile::resavedcm(QString filepath, QDateTime dt, QString tgtpath)
+{
+    QString fullfilename = filepath.split('\\').back();
+    QString filename = fullfilename.split('.').first();
+    scanid = fullfilename.split('_').first();
+    QString wandh = filename.split('_').back();
+    width = QString(wandh.split('x').first()).toInt();
+    height = QString(wandh.split('x').back()).toInt();
+
+
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+    QByteArray ba = filepath.toLocal8Bit();
+    ifstream rfile(ba.data(),ios::binary);
+
+    long long size = width*height*2;
+    char *buffer = new char[size];
+    rfile.read(buffer,size);
+    unsigned short *pimg = (unsigned short*) buffer;
+
+    DcmFileFormat fileformat;
+    ba = filename.toLocal8Bit();
+    fileformat.getDataset()->putAndInsertString(DCM_PatientName,ba.data());
+    ba = scanid.toLocal8Bit();
+    fileformat.getDataset()->putAndInsertString(DCM_PatientID,ba.data());
+    ba = dt.toString("yyyy-MM-dd").toLocal8Bit();
+    fileformat.getDataset()->putAndInsertString(DCM_StudyDate,ba.data());
+    ba = dt.toString("hh:mm:ss").toLocal8Bit();
+    fileformat.getDataset()->putAndInsertString(DCM_StudyTime,ba.data());
+    fileformat.getDataset()->putAndInsertUint16(DCM_Rows,height);
+    fileformat.getDataset()->putAndInsertUint16(DCM_Columns,width);
+
+    Uint16* pData = new Uint16[width*height];
+    for (int i=0;i<height;i++)
+    {
+        for (int j=0;j<width;j++)
+        {
+            pData[i*width+j] = pimg[i*width+j];
+        }
+    }
+    fileformat.getDataset()->putAndInsertUint16Array(DCM_PixelData,pData,width*height);
+    ba = tgtpath.toLocal8Bit();
+    fileformat.saveFile(ba.data(),EXS_LittleEndianImplicit,EET_UndefinedLength,EGL_withoutGL);
+    rfile.close();
+}
+
 //操作序列解析
 //$0:0.1,0.2,0.3,0.4($分隔操作，：分隔函数名与参数，，分隔参数)
-//0:正负 1：水平翻转 2：竖直翻转 3:调整色阶 4:调整对比度
+//0:正负 1：水平翻转 2：竖直翻转 3:调整色阶 4:调整对比度 5:错切变换 6:浮雕化
 extern cv::Mat_<unsigned short> parse_operationstr(QString operation, cv::Mat_<unsigned short> img)
 {
     QStringList opset = operation.split('$');
@@ -187,14 +347,50 @@ extern cv::Mat_<unsigned short> parse_operationstr(QString operation, cv::Mat_<u
                 contrast_level = QString::fromLocal8Bit(tmp.toLocal8Bit().data()).toInt();
                 tcontrast(img,img,contrast_level);
             }
+            else if (cur_type == "5")
+            {
+                float degree;
+                QStringList paralist = cur_para.split(",");
+
+                QString tmp = paralist.at(0);
+                if (tmp.isEmpty())
+                {
+                    cerr<<"homo para wrong!"<<endl;
+                    return img;
+                }
+                degree = QString::fromLocal8Bit(tmp.toLocal8Bit().data()).toFloat();
+                homotransfer(img,degree);
+            }
+            else if (cur_type == "6")
+            {
+                int dis,contrast;
+                QStringList paralist = cur_para.split(",");
+
+                QString tmp = paralist.at(0);
+                if (tmp.isEmpty())
+                {
+                    cerr<<"emboss para1 wrong!"<<endl;
+                    return img;
+                }
+                dis = QString::fromLocal8Bit(tmp.toLocal8Bit().data()).toInt();
+
+                tmp = paralist.at(1);
+                if (tmp.isEmpty())
+                {
+                    cerr<<"emboss para2 wrong!"<<endl;
+                    return img;
+                }
+                contrast = QString::fromLocal8Bit(tmp.toLocal8Bit().data()).toInt();
+                emboss(img,dis,contrast);
+            }
             else
             {
                 cerr<<"operation type error!"<<endl;
                 return img;
             }
         }
-
     }
+
     return img;
 }
 

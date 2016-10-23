@@ -104,6 +104,7 @@ cv::Mat dcmtkfile::loadfile(QString path)
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
     QByteArray ba = path.toLocal8Bit();
     OFCondition status = fileformat.loadFile(ba.data());
+
     if (status.good())
     {
         if (fileformat.getDataset()->findAndGetOFString(DCM_PatientName,name).good())

@@ -41,10 +41,11 @@ public:
     void clear(){chartlist.clear();}
     void insert(drawchart temp){chartlist.push_back(temp);}
     void update(drawchart oldchart, drawchart newchart);
-    bool ifonshape(QPoint po);
+    bool ifonshape(QPoint po, int type=0);
     drawchart findonshape(QPoint po);
     bool ifonrec(QPoint po);
     drawchart findonrec(QPoint po);
+
 };
 
 class database

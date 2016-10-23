@@ -1,5 +1,5 @@
-#ifndef SLIDERCHOOSE_H
-#define SLIDERCHOOSE_H
+#ifndef UI_SLIDERCHOOSE_H
+#define UI_SLIDERCHOOSE_H
 
 #include <QDialog>
 
@@ -16,10 +16,19 @@ public:
     ~ui_sliderchoose();
 
 signals:
-    s_value(float degree);
+    void s_value(float degree);
+    void s_ok_value(float degree);
+
+private slots:
+
+    void on_ok_button_clicked();
+
+    void on_cancel_button_clicked();
+
+    void on_degree_textEdited(const QString &arg1);
 
 private:
     Ui::ui_sliderchoose *ui;
 };
 
-#endif // SLIDERCHOOSE_H
+#endif // UI_SLIDERCHOOSE_H

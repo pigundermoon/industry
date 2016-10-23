@@ -392,6 +392,9 @@ QPushButton {width:30px;height:30px;}</string>
          <property name="sortingEnabled">
           <bool>true</bool>
          </property>
+         <attribute name="headerCascadingSectionResizes">
+          <bool>false</bool>
+         </attribute>
         </widget>
        </item>
       </layout>
@@ -465,6 +468,8 @@ QPushButton {width:30px;height:30px;}</string>
     </widget>
     <addaction name="hist"/>
     <addaction name="hdr"/>
+    <addaction name="rulergra"/>
+    <addaction name="emboss"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="autoFillBackground">
@@ -515,6 +520,7 @@ QPushButton {width:30px;height:30px;}</string>
     <addaction name="turn"/>
     <addaction name="drawrect"/>
     <addaction name="resetdraw"/>
+    <addaction name="homotran"/>
     <addaction name="back"/>
    </widget>
    <widget class="QMenu" name="menu">
@@ -528,6 +534,7 @@ QPushButton {width:30px;height:30px;}</string>
      <string notr="true">文件</string>
     </property>
     <addaction name="openfile"/>
+    <addaction name="scan"/>
     <addaction name="resave"/>
     <addaction name="info"/>
     <addaction name="exit"/>
@@ -821,6 +828,35 @@ QPushButton {width:30px;height:30px;}</string>
    </property>
    <property name="text">
     <string>重置绘图</string>
+   </property>
+  </action>
+  <action name="rulergra">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>屏幕灰度检测条</string>
+   </property>
+  </action>
+  <action name="homotran">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>错切变换</string>
+   </property>
+  </action>
+  <action name="emboss">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>浮雕化</string>
+   </property>
+  </action>
+  <action name="scan">
+   <property name="text">
+    <string>扫描</string>
    </property>
   </action>
  </widget>

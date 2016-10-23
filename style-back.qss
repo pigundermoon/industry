@@ -298,11 +298,41 @@ QWidget#imagelist
     outline:0;
 }
 
-QWidget#imagelist::item {
+QWidget#imagelist::item
+{
     background: rgba(75, 75, 75, 255);
     border: 2px solid color(55, 55, 55);
 }
-QWidget#imagelist::item:selected {
-    background: rgba(65, 65, 65, 255);
+QWidget#imagelist::item:selected
+{
+    background: rgba(55, 55, 55, 255);
     border: 2px solid red;
+}
+
+QTreeView#fileexplorer
+{
+    background: white;
+    show-decoration-selected: 1;
+    outline:0;
+}
+
+QHeaderView::section
+{
+    padding: 5px;
+    background: rgba(219, 219, 219, 255);
+    border:0px;
+    font-family: 微软雅黑;
+    font-size: 15px;
+}
+QTreeView::item
+{
+    font-family: 微软雅黑;
+    font-size: 15px;
+    border: 0px;
+}
+QTreeView::item:selected
+{
+    background: rgba(75, 75, 75, 255);
+    border: 0px;
+
 }

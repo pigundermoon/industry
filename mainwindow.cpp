@@ -83,7 +83,10 @@ MainWindow::~MainWindow()
 }
 void MainWindow::initialize()
 {
-    ifinvert = false;
+
+    draw_height = 20;
+    draw_dhwnum = 32;
+    graruler=false;
     ui->winshowimg->setMouseTracking(true);
     rstatus = rsta_translation;
     drawst=false;
@@ -146,10 +149,13 @@ void MainWindow::initialize()
     ui->toolBar->addSeparator();
     //
     button = new QToolButton();
+    connect(button, SIGNAL(released()), this, SLOT(on_drawrect_triggered()));
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/resize_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/resize_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/resize_down.png);}"
                           "QToolButton:disabled {border-image: url(:/img/img/resize_disabled.png);}");
+    adapter = new ButtonActionAdapter(this, ui->drawrect, button);
+    adapter->local_connect();
     ui->toolBar->addWidget(button);
 
     //选择窗宽窗位模式
@@ -446,10 +452,10 @@ void MainWindow::show_image(cv::Mat_<unsigned short> s, int type, bool notcgra)
     showpainter->setPen(pen);
     showpainter->setFont(font);
 
-    showpainter->drawText(20,showimg.height()/2,label_loc[label_loc_ptr[0]]);
-    showpainter->drawText(showimg.width()/2,20,label_loc[label_loc_ptr[1]]);
-    showpainter->drawText(showimg.width()-50,showimg.height()/2,label_loc[label_loc_ptr[2]]);
-    showpainter->drawText(showimg.width()/2,showimg.height()-20,label_loc[label_loc_ptr[3]]);
+    showpainter->drawText(showimg.width()/31/2,showimg.height()/2,label_loc[label_loc_ptr[0]]);
+    showpainter->drawText(showimg.width()/2,showimg.width()/31,label_loc[label_loc_ptr[1]]);
+    showpainter->drawText(showimg.width()-showimg.width()/31,showimg.height()/2,label_loc[label_loc_ptr[2]]);
+    showpainter->drawText(showimg.width()/2,showimg.height()-showimg.width()/30,label_loc[label_loc_ptr[3]]);
 
     font.setBold(false);
     font.setPixelSize(15);
@@ -463,20 +469,19 @@ void MainWindow::show_image(cv::Mat_<unsigned short> s, int type, bool notcgra)
     drawpaint(showpainter);
 
 
-    showpainter->setPen(Qt::NoPen);
-    int dh = showimg.height()/40;
-    for (int i=0;i<=29;i++)
-    {
-        int value = i*(float(255)/30);
-        if (value>255) value = 255;
-        showpainter->setBrush(QBrush(QColor(value,value,value),Qt::SolidPattern));
-        showpainter->drawRect(60,showimg.height()-dh*5-i*dh,dh,dh);
-    }
+
+
 
 
 
     ui->winshowimg->setPixmap(QPixmap::fromImage(showimg));
     showpainter->end();
+}
+
+void MainWindow::on_rulergra_triggered()
+{
+    graruler = !graruler;
+    show_image(srcimgshort,0);
 }
 
 void MainWindow::drawpaint(QPainter *painter)
@@ -486,37 +491,71 @@ void MainWindow::drawpaint(QPainter *painter)
     {
         QPoint p1=(drawchart(cur_chartlist.chartlist.at(i))).p1;
         QPoint p2=(drawchart(cur_chartlist.chartlist.at(i))).p2;
-        painter->drawRect(p1.x(),p1.y(),p2.x()-p1.x(),p2.y()-p1.y());
 
-        float j1 = w_center + ((double)(p1.x())-ui->winshowimg->width()/2)/(((double)curScale)/100) / srcimgshort.cols;
-//        if (j1<0.01||j1>0.99) j1 =0.01;
-
-        float j2 = w_center + ((double)(p2.x())-ui->winshowimg->width()/2)/(((double)curScale)/100) / srcimgshort.cols;
-//        if (j2<0.01||j2>0.99) j2 =0.99;
-
-        float i1 = h_center + ((double)(p1.y())-ui->winshowimg->height()/2)/(((double)curScale)/100) / srcimgshort.rows;
-//        if (i1<0.01||i1>0.99) i1 =0.01;
-
-        float i2 = h_center + ((double)(p2.y())-ui->winshowimg->height()/2)/(((double)curScale)/100) / srcimgshort.rows;
-//        if (i2<0.01||i2>0.99) i2 =0.99;
-
-        int gray = 0;
-        int cnt = 0;
-
-        cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-        double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
-        ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
-        levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
-        for (int i=i1*timg.rows;i<=i2*timg.rows;i++)
+        if ((drawchart(cur_chartlist.chartlist.at(i))).type==0)
         {
-            if (i<0||i>=timg.rows) continue;
-            for (int j=j1*timg.cols;j<=j2*timg.cols;j++)
+            painter->drawRect(p1.x(),p1.y(),p2.x()-p1.x(),p2.y()-p1.y());
+
+            float j1 = w_center + ((double)(p1.x())-ui->winshowimg->width()/2)/(((double)curScale)/100) / srcimgshort.cols;
+    //        if (j1<0.01||j1>0.99) j1 =0.01;
+
+            float j2 = w_center + ((double)(p2.x())-ui->winshowimg->width()/2)/(((double)curScale)/100) / srcimgshort.cols;
+    //        if (j2<0.01||j2>0.99) j2 =0.99;
+
+            float i1 = h_center + ((double)(p1.y())-ui->winshowimg->height()/2)/(((double)curScale)/100) / srcimgshort.rows;
+    //        if (i1<0.01||i1>0.99) i1 =0.01;
+
+            float i2 = h_center + ((double)(p2.y())-ui->winshowimg->height()/2)/(((double)curScale)/100) / srcimgshort.rows;
+    //        if (i2<0.01||i2>0.99) i2 =0.99;
+
+            int gray = 0;
+            int cnt = 0;
+
+    //        cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
+    //        double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
+    //        ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
+    //        levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
+            for (int i=i1*srcimgchar.rows;i<=i2*srcimgchar.rows;i++)
             {
-                if (j<0||j>=timg.cols) continue;
-                gray = float(gray*cnt)/(cnt+1)+float(timg(i,j))/(cnt+1);
+                if (i<0||i>=srcimgchar.rows) continue;
+                for (int j=j1*srcimgchar.cols;j<=j2*srcimgchar.cols;j++)
+                {
+                    if (j<0||j>=srcimgchar.cols) continue;
+                    gray = float(gray*cnt)/(cnt+1)+float(srcimgchar(i,j))/(cnt+1);
+                }
             }
+            painter->drawText(p1.x(),p1.y()-12,QString::number(gray));
         }
-        painter->drawText(p1.x(),p1.y()-12,QString::number(gray));
+        else if ((drawchart(cur_chartlist.chartlist.at(i))).type==1)
+        {
+            QPen recpen = painter->pen();
+            QBrush recbrush = painter->brush();
+
+            if (graruler)
+            {
+                QPen tpen = painter->pen();
+                tpen.setColor(Qt::white);
+                painter->setPen(Qt::NoPen);
+
+                for (int i=0;i<=draw_dhwnum;i++)
+                {
+                    int value = i*256/draw_dhwnum;
+                    if (value>255) value = 255;
+                    painter->setBrush(QBrush(QColor(value,value,value),Qt::SolidPattern));
+                    painter->setPen(tpen);
+                    painter->drawText(p1.x()+i*draw_dhw,p1.y()-8,QString::number(value));
+                    painter->setPen(Qt::NoPen);
+                    painter->drawRect(p1.x()+i*draw_dhw,p1.y(),draw_dhw,draw_height);
+                    if (i==draw_dhwnum && p1.x()+i*draw_dhw+draw_dhw<ui->winshowimg->width() && p1.x()+i*draw_dhw+1.5*draw_dhw>ui->winshowimg->width())
+                    {
+                        painter->drawRect(p1.x()+(i+1)*draw_dhw,p1.y(),ui->winshowimg->width()-p1.x()+(i+1)*draw_dhw,draw_height);
+                    }
+                }
+            }
+
+            painter->setPen(recpen);
+            painter->setBrush(recbrush);
+        }
     }
 }
 
@@ -582,12 +621,12 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
                 QPoint temp = ev->globalPos();
                 int xvalue = temp.x()-scrollpos.x();
                 int yvalue = temp.y()-scrollpos.y();
-                w_center -= ((double)xvalue)/((double)curScale*10)/2;
-                h_center -= ((double)yvalue)/((double)curScale*10)/2;
-                if (w_center>0.99) w_center=0.99;
-                if (w_center<0.01) w_center=0.01;
-                if (h_center>0.99) h_center=0.99;
-                if (h_center<0.01) h_center=0.01;
+                w_center -= ((double)xvalue)/((double)curScale*10)/4;
+                h_center -= ((double)yvalue)/((double)curScale*10)/4;
+//                if (w_center>0.99) w_center=0.99;
+//                if (w_center<0.01) w_center=0.01;
+//                if (h_center>0.99) h_center=0.99;
+//                if (h_center<0.01) h_center=0.01;
                 scrollpos=temp;
                 show_image(srcimgshort,0);
                 return true;
@@ -640,8 +679,31 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
         else if(e->type() == QEvent::Wheel)
         {
             QWheelEvent* ev = static_cast<QWheelEvent*>(e);
-            int num=ev->delta()/50;
-            setCurScale(curScale + num);     
+            if (cur_chartlist.ifonshape(tev->pos(),1))
+            {
+                draw_dhw+=ev->delta()/10;
+                if (draw_dhw>200) draw_dhw=200;
+                if (draw_dhw<30) draw_dhw=30;
+                for (int i=0;i<cur_chartlist.chartlist.size();i++)
+                {
+                    if ((drawchart(cur_chartlist.chartlist.at(i))).type==1)
+                    {
+                        drawchart oldc = (drawchart(cur_chartlist.chartlist.at(i)));
+                        drawchart newc = oldc;
+                        newc.p2.setX(newc.p1.x()+draw_dhw*(draw_dhwnum+1));
+                        cur_chartlist.update(oldc,newc);
+                        oldchart = newc;
+                    }
+                }
+                show_image(srcimgshort,0);
+            }
+            else
+            {
+                int num=ev->delta()/50;
+                setCurScale(curScale + num);
+            }
+
+
             return true;
         }
     }
@@ -747,6 +809,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
                 pardraw=0;
                 int x1,x2,y1,y2;
                 drawchart tmpc;
+                tmpc.type=0;
 
                 x1 = stdrawpos.x()<tmp.x()?stdrawpos.x():tmp.x();
                 x2 = stdrawpos.x()>tmp.x()?stdrawpos.x():tmp.x();
@@ -763,6 +826,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
 
 
                 drawchart oldc,newc;
+                oldc.type=0;newc.type=0;
                 int x1,x2,y1,y2;
                 x1 = stdrawpos.x()<prepos.x()?stdrawpos.x():prepos.x();
                 x2 = stdrawpos.x()>prepos.x()?stdrawpos.x():prepos.x();
@@ -791,6 +855,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
                 pardraw=0;
                 int x1,x2,y1,y2;
                 drawchart tmpc;
+                tmpc.type=0;
 
                 x1 = stdrawpos.x()<tmp.x()?stdrawpos.x():tmp.x();
                 x2 = stdrawpos.x()>tmp.x()?stdrawpos.x():tmp.x();
@@ -806,6 +871,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
             {
 
                 drawchart oldc,newc;
+                oldc.type=0;newc.type=0;
                 int x1,x2,y1,y2;
                 x1 = stdrawpos.x()<prepos.x()?stdrawpos.x():prepos.x();
                 x2 = stdrawpos.x()>prepos.x()?stdrawpos.x():prepos.x();
@@ -837,6 +903,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
             QPoint tmp = ev->pos();
 
             drawchart oldc,newc;
+            oldc.type=0;newc.type=0;
             int x1,x2,y1,y2;
             x1 = stdrawpos.x()<prepos.x()?stdrawpos.x():prepos.x();
             x2 = stdrawpos.x()>prepos.x()?stdrawpos.x():prepos.x();
@@ -861,6 +928,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
             QPoint tmp = ev->pos();
 
             drawchart oldc,newc;
+            oldc.type=0;newc.type=0;
             int x1,x2,y1,y2;
             x1 = stdrawpos.x()<prepos.x()?stdrawpos.x():prepos.x();
             x2 = stdrawpos.x()>prepos.x()?stdrawpos.x():prepos.x();
@@ -889,6 +957,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
             QPoint tmp = ev->pos();
 
             drawchart newc;
+            newc.type=oldchart.type;
             int x1,x2,y1,y2;
             int dx = tmp.x() - prepos.x();
             int dy = tmp.y() - prepos.y();
@@ -897,7 +966,16 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
             x1 = oldchart.p1.x()+dx;
             x2 = oldchart.p2.x()+dx;
             y1 = oldchart.p1.y()+dy;
-            y2 = oldchart.p2.y()+dy;
+            if (y1>ui->winshowimg->height()-draw_height)
+            {
+                y1=ui->winshowimg->height()-draw_height;
+            }
+            if (y1<20)
+            {
+                y1=20;
+            }
+
+            y2 = y1+draw_height;
             newc.p1.setX(x1);newc.p1.setY(y1);newc.p2.setX(x2);newc.p2.setY(y2);
 
             cur_chartlist.update(oldchart,newc);
@@ -912,6 +990,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
             QPoint tmp = ev->pos();
 
             drawchart newc;
+            newc.type=oldchart.type;
             int x1,x2,y1,y2;
             int dx = tmp.x() - prepos.x();
             int dy = tmp.y() - prepos.y();
@@ -920,6 +999,15 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
             x1 = oldchart.p1.x()+dx;
             x2 = oldchart.p2.x()+dx;
             y1 = oldchart.p1.y()+dy;
+            if (y1>ui->winshowimg->height()-draw_height)
+            {
+                y1=ui->winshowimg->height()-draw_height;
+            }
+            if (y1<15)
+            {
+                y1=15;
+            }
+
             y2 = oldchart.p2.y()+dy;
             newc.p1.setX(x1);newc.p1.setY(y1);newc.p2.setX(x2);newc.p2.setY(y2);
 
@@ -938,6 +1026,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
 
 void MainWindow::enableaction()
 {
+    ui->rulergra->setEnabled(true);
     ui->hist->setEnabled(true);
     ui->zoom->setEnabled(true);
     ui->zoom_in->setEnabled(true);
@@ -958,9 +1047,12 @@ void MainWindow::enableaction()
     ui->drawrect->setEnabled(true);
     ui->resetdraw->setEnabled(true);
     pRate->setEnabled(true);
+    ui->homotran->setEnabled(true);
+    ui->emboss->setEnabled(true);
 }
 void MainWindow::disableaction()
 {
+    ui->rulergra->setEnabled(false);
     ui->hist->setEnabled(false);
     ui->zoom->setEnabled(false);
     ui->zoom_in->setEnabled(false);
@@ -981,6 +1073,8 @@ void MainWindow::disableaction()
     ui->drawrect->setEnabled(false);
     ui->resetdraw->setEnabled(false);
     pRate->setEnabled(false);
+    ui->homotran->setEnabled(false);
+    ui->emboss->setEnabled(false);
 }
 
 void MainWindow::reset()
@@ -1004,43 +1098,21 @@ void MainWindow::settext(QString arg)
 void MainWindow::on_resave_triggered()
 {
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
-    QString filename1 = QFileDialog::getSaveFileName(this,QString::fromLocal8Bit("另存为"),"","Images(*.tiff)");
+    QString filename1 = QFileDialog::getSaveFileName(this,QString::fromLocal8Bit("另存为"),"","Images (*.tiff);;dicom (*.)");
     if (filename1.isEmpty()) return;
-    QTextCodec *code = QTextCodec::codecForName("gb18030");
-    TIFF* tif = TIFFOpen(code->fromUnicode(filename1).data(), "w");
-//    TIFF* ttif = TIFFOpen(code->fromUnicode(filename).data(), "r");
+    if (!QString(filename1.split('.').back()).compare("tiff"))
+    {
+        QTextCodec *code = QTextCodec::codecForName("gb18030");
+        TIFF* tif = TIFFOpen(code->fromUnicode(filename1).data(), "w");
         if (tif)
         {
             int h=srcimgshort.rows, w=srcimgshort.cols;
              uint32* temp;
-
-//             TIFFGetField(ttif,TIFFTAG_IMAGEWIDTH,temp);
              TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
-
              TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,w);
-//             TIFFGetField(ttif,TIFFTAG_IMAGELENGTH,temp);
              TIFFSetField(tif, TIFFTAG_IMAGELENGTH,h);
-//             TIFFGetField(ttif,TIFFTAG_BITSPERSAMPLE,temp);
              TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,16);
-//             TIFFGetField(ttif,TIFFTAG_SAMPLESPERPIXEL,temp);
              TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL,1);
-//             TIFFGetField(ttif,TIFFTAG_ROWSPERSTRIP,temp);
-//             TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP,*temp);
-//             TIFFGetField(ttif,TIFFTAG_COMPRESSION,temp);
-//             TIFFSetField(tif, TIFFTAG_COMPRESSION,*temp);
-//             TIFFGetField(ttif,TIFFTAG_PHOTOMETRIC,temp);
-//             TIFFSetField(tif, TIFFTAG_PHOTOMETRIC,*temp);
-//             TIFFGetField(ttif,TIFFTAG_FILLORDER,temp);
-//             TIFFSetField(tif, TIFFTAG_FILLORDER,*temp);
-//             TIFFGetField(ttif,TIFFTAG_PLANARCONFIG,temp);
-//             TIFFSetField(tif, TIFFTAG_PLANARCONFIG,*temp);
-//             TIFFGetField(ttif,TIFFTAG_XRESOLUTION,temp);
-//             TIFFSetField(tif, TIFFTAG_XRESOLUTION,*temp);
-//             TIFFGetField(ttif,TIFFTAG_YRESOLUTION,temp);
-//             TIFFSetField(tif, TIFFTAG_YRESOLUTION,*temp);
-//             TIFFGetField(ttif,TIFFTAG_RESOLUTIONUNIT,temp);
-//             TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT,*temp);
-
              tsize_t aa=TIFFScanlineSize(tif);
              tdata_t buf=_TIFFmalloc(TIFFScanlineSize(tif));
              uint16* data;
@@ -1053,9 +1125,39 @@ void MainWindow::on_resave_triggered()
 
                  TIFFWriteScanline(tif,buf,(uint32)row, 0);
              }
-//            TIFFClose(ttif);
             TIFFClose(tif);
         }
+    }
+    else
+    {
+        QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+        QByteArray ba;
+        DcmFileFormat fileformat;
+
+        ba = cur_item.name.toLocal8Bit();
+        fileformat.getDataset()->putAndInsertString(DCM_PatientName,ba.data());
+        ba = cur_item.id.toLocal8Bit();
+        fileformat.getDataset()->putAndInsertString(DCM_PatientID,ba.data());
+        ba = cur_item.date.toLocal8Bit();
+        fileformat.getDataset()->putAndInsertString(DCM_StudyDate,ba.data());
+        ba = cur_item.date.toLocal8Bit();
+        fileformat.getDataset()->putAndInsertString(DCM_StudyTime,ba.data());
+        fileformat.getDataset()->putAndInsertUint16(DCM_Rows,srcimgshort.rows);
+        fileformat.getDataset()->putAndInsertUint16(DCM_Columns,srcimgshort.cols);
+
+        Uint16* pData = new Uint16[srcimgshort.rows*srcimgshort.cols];
+        for (int i=0;i<srcimgshort.rows;i++)
+        {
+            for (int j=0;j<srcimgshort.cols;j++)
+            {
+                pData[i*srcimgshort.cols+j] = 65536 - srcimgshort(i,j);
+            }
+        }
+        fileformat.getDataset()->putAndInsertUint16Array(DCM_PixelData,pData,srcimgshort.rows*srcimgshort.cols);
+        ba = filename1.toLocal8Bit();
+        fileformat.saveFile(ba.data(),EXS_LittleEndianImplicit,EET_UndefinedLength,EGL_withoutGL);
+    }
+
 }
 
 void MainWindow::on_imagelist_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
@@ -1103,6 +1205,9 @@ void MainWindow::openfile(QString filename, int type)
 
     if (filename.isEmpty()) return;
 
+    QString filename_suffix = filename.split('.').back();
+    rawfile tmpraw;
+
     QTextCodec *code = QTextCodec::codecForName("gb18030");
 
     cv::Mat_<unsigned short> srcimgshort_temp;
@@ -1143,6 +1248,11 @@ void MainWindow::openfile(QString filename, int type)
 
         _TIFFfree(buf);
         TIFFClose(tif);
+    }
+    else if(!QString::fromLocal8Bit(filename_suffix.toLocal8Bit().data()).compare(("raw")))
+    {
+        tmpraw.readfile(filename);
+        tmpraw.img.copyTo(srcimgshort_temp);
     }
     else
     {
@@ -1192,13 +1302,21 @@ void MainWindow::openfile(QString filename, int type)
             dt.setDate(date.currentDate());
             cur_item.date=dt.toString("yyyy/MM/dd hh:mm:ss");
 
-            cur_item.id = "tmp";
+            if (!QString::fromLocal8Bit(filename_suffix.toLocal8Bit().data()).compare(("raw")))
+            {
+                cur_item.id = tmpraw.scanid;
+            }
+            else
+            {
+                cur_item.id = "tmp";
+            }
             cur_item.operation = "";
             cur_item.chart = "";
             update_chartlist(cur_item.chart);
         }
         else
         {
+            ifinvert = false;
             srcimgshort=parse_operationstr(cur_item.operation, srcimgshort);
             update_chartlist(cur_item.chart);
         }
@@ -1267,8 +1385,8 @@ void MainWindow::openfile(QString filename, int type)
 
         int slidermax,slidermin,sliderpos;
 
-        int winw=ui->winshowimg->width();
-        int winh=ui->winshowimg->height();
+        int winw=ui->winshowimg->width()*0.93;
+        int winh=ui->winshowimg->height()*0.93;
         ow=showimg.width();
         oh=showimg.height();
         double wrate=double(winw)/ow;
@@ -1318,6 +1436,14 @@ void MainWindow::openfile(QString filename, int type)
 void MainWindow::update_chartlist(QString chart)
 {
     cur_chartlist.clear();
+
+    draw_dhw = ui->winshowimg->width()/(draw_dhwnum+1);
+    drawchart tmpchart;
+    tmpchart.type=1;
+    tmpchart.p1=QPoint(0,ui->winshowimg->height()-draw_height);
+    tmpchart.p2=QPoint(ui->winshowimg->width(),ui->winshowimg->height());
+    cur_chartlist.insert(tmpchart);
+
     QStringList charts = chart.split('$');
     for (int i=0;i<charts.size();i++)
     {
@@ -1327,6 +1453,7 @@ void MainWindow::update_chartlist(QString chart)
         {
             QString nums = cur_chartchar.split(':').back();
             drawchart tmpchar;
+            tmpchar.type=0;
             QString tmp;
             tmp = nums.split(',').at(0);
             tmpchar.p1.setX(tmp.toInt());
@@ -1340,6 +1467,7 @@ void MainWindow::update_chartlist(QString chart)
             cur_chartlist.insert(tmpchar);
         }
     }
+
 }
 
 void MainWindow::on_drawrect_triggered()
@@ -1351,6 +1479,12 @@ void MainWindow::on_drawrect_triggered()
 void MainWindow::on_resetdraw_triggered()
 {
     cur_chartlist.clear();
+    drawchart tmpchart;
+    tmpchart.type=1;
+    tmpchart.p1=QPoint(0,ui->winshowimg->height()-draw_height);
+    tmpchart.p2=QPoint(ui->winshowimg->width(),ui->winshowimg->height());
+    cur_chartlist.insert(tmpchart);
+
     show_image(srcimgshort,0);
 }
 
@@ -1358,7 +1492,7 @@ void MainWindow::on_resetdraw_triggered()
 void MainWindow::on_openfile_triggered()
 {
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
-    QStringList filelist = QFileDialog::getOpenFileNames(this,QString::fromLocal8Bit("打开"),"","Images (*.tif *.tiff);;(*.*)");
+    QStringList filelist = QFileDialog::getOpenFileNames(this,QString::fromLocal8Bit("打开"),"","Images (*.tif *.tiff);;(*.raw);;(*.*)");
      for(QStringList::Iterator it=filelist.begin();it!=filelist.end();it++)
     {
         if (it==filelist.begin())
@@ -1604,6 +1738,7 @@ void MainWindow::on_invert_triggered()
 }
 //触发水平翻转按钮
 void MainWindow::on_turn_horizontal_triggered()
+
 {
     if(srcimgshort.empty()) return;
     ui->back->setEnabled(true);
@@ -1765,6 +1900,175 @@ void MainWindow::on_removegrade_triggered()
 
     show_image(srcimgshort,1);
 }
+
+//错切变换
+void MainWindow::on_homotran_triggered()
+{
+    if (srcimgshort.empty()) return;
+
+    w6=new ui_sliderchoose();
+    QObject::connect(w6,SIGNAL(s_value(float)),this,SLOT(r_degree(float)));
+    QObject::connect(w6,SIGNAL(s_ok_value(float)),this,SLOT(r_ok_degree(float)));
+
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+    w6->setWindowTitle(QString::fromLocal8Bit("错切变换"));
+    w6->setWindowFlags(Qt::WindowCloseButtonHint);
+    w6->setGeometry(x()+100,y()+100,201,91);
+    w6->setFixedWidth(201);     
+    w6->setFixedHeight(93);
+    w6->exec();
+}
+
+void MainWindow::r_degree(float degree)
+{
+    Mat_<unsigned short> timg;
+    srcimgshort.copyTo(timg);
+    homotransfer(timg,degree);
+    show_image(timg,1);
+}
+
+void MainWindow::r_ok_degree(float degree)
+{
+    homotransfer(srcimgshort,degree);
+    show_image(srcimgshort,1);
+    if (abs(degree)>0.01) cur_item.operation+="$5:" + QString::number(degree);
+}
+
+void MainWindow::on_emboss_triggered()
+{
+
+    if (srcimgshort.empty()) return;
+    w7=new ui_emboss();
+    QObject::connect(w7,SIGNAL(s_cancel()),this,SLOT(r_cancel()));
+    QObject::connect(w7,SIGNAL(s_ok_value(int,int)),SLOT(r_ok_emboss_value(int,int)));
+    QObject::connect(w7,SIGNAL(s_value(int,int)),this,SLOT(r_emboss_value(int,int)));
+
+    Mat_<unsigned short> timg;
+    srcimgshort.copyTo(timg);
+    emboss(timg,3,100);
+    show_image(timg,1);
+
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+    w7->setWindowTitle(QString::fromLocal8Bit("浮雕化"));
+    w7->setWindowFlags(Qt::WindowCloseButtonHint);
+    w7->setGeometry(x()+100,y()+100,404,150);
+    w7->setFixedWidth(404);
+    w7->setFixedHeight(150);
+    w7->exec();
+}
+
+void MainWindow::r_emboss_value(int dis, int contrast)
+{
+    Mat_<unsigned short> timg;
+    srcimgshort.copyTo(timg);
+    emboss(timg,dis,contrast);
+    show_image(timg,1);
+}
+
+void MainWindow::r_ok_emboss_value(int dis, int contrast)
+{
+    emboss(srcimgshort,dis,contrast);
+    show_image(srcimgshort,1);
+    cur_item.operation+="$6:"+QString::number(dis)+","+QString::number(contrast);
+}
+
+void MainWindow::on_scan_triggered()
+{
+    QFile file("path.txt");
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug()<<"Can't open the file!"<<endl;
+    }
+
+        QByteArray line = file.readLine();
+        QString execname = QString::fromLocal8Bit(line);
+        QProcess::execute(execname);
+
+        line = file.readLine();
+        QString filepath = QString::fromLocal8Bit(line);
+        QDir dir;
+        dir.setPath(filepath);
+        dir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
+        dir.setSorting(QDir::Size | QDir::Reversed);
+        QFileInfoList list = dir.entryInfoList();
+        for (int i = 0; i < list.size(); ++i)
+        {
+            QFileInfo fileInfo = list.at(i);
+            if (!fileInfo.suffix().compare("raw",Qt::CaseInsensitive))
+            {
+                imageitem tmp;
+                tmp = industry_db.query_imageitem("data\\" + QString(fileInfo.fileName().split('.').first()));
+                if (tmp.exist) continue;
+                else
+                {
+                    tmp.path = "data\\" + QString(fileInfo.fileName().split('.').first());
+                    tmp.name = fileInfo.fileName().split('.').first();
+                    tmp.id = tmp.name.split('_').first();
+
+                    QDateTime dt;
+                    QTime time;
+                    QDate date;
+                    dt.setTime(time.currentTime());
+                    dt.setDate(date.currentDate());
+                    tmp.date=dt.toString("yyyy/MM/dd hh:mm:ss");
+
+                    rawfile tmpraw;
+                    tmpraw.resavedcm(fileInfo.filePath(),dt,tmp.path);
+
+                    tmp.operation = "";
+                    tmp.chart = "";
+
+                    industry_db.insert_imageitem(tmp);
+                    refresh_dataset();
+                }
+            }
+
+        }
+
+}
+
+
+
+
+
+
+
+//if (!fileInfo.suffix().compare("TIFF",Qt::CaseInsensitive)|| !fileInfo.suffix().compare("TIF",Qt::CaseInsensitive) || !fileInfo.suffix().compare("raw",Qt::CaseInsensitive))
+//{
+
+//    imageitem tmp;
+//    tmp = industry_db.query_imageitem(fileInfo.filePath());
+//    if (tmp.exist) continue;
+//    else
+//    {
+
+
+//        tmp.path=fileInfo.filePath();
+//        tmp.name=fileInfo.fileName();
+
+//        QDateTime dt;
+//        QTime time;
+//        QDate date;
+//        dt.setTime(time.currentTime());
+//        dt.setDate(date.currentDate());
+//        tmp.date=dt.toString("yyyy/MM/dd hh:mm:ss");
+
+//        if (!QString(QString::fromLocal8Bit(QString(tmp.name.split('.').back()).toLocal8Bit().data()).data()).compare(("raw")))
+//        {
+//            tmp.id = tmp.name.split('_').first();
+//        }
+//        else
+//        {
+//            tmp.id = "tmp";
+//        }
+
+//        tmp.operation = "";
+//        tmp.chart = "";
+
+//        industry_db.insert_imageitem(tmp);
+//        refresh_dataset();
+//    }
+//}
 
 
 

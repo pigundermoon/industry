@@ -1,5 +1,6 @@
 #include "database.h"
 
+
 bool drawchart::onshape(QPoint po)
 {
     if (po.x()>=p1.x()&&po.x()<=p2.x()&&po.y()>=p1.y()&&po.y()<=p2.y()) return true;
@@ -9,7 +10,7 @@ bool drawchart::onshape(QPoint po)
 
 bool drawchart::onrec(QPoint po)
 {
-    if (abs(po.x()-p2.x())<5&&abs(po.y()-p2.y())<5) return true;
+    if (type==0&&abs(po.x()-p2.x())<5&&abs(po.y()-p2.y())<5) return true;
     return false;
 }
 drawchart drawcharlist::findonshape(QPoint po)
@@ -23,12 +24,23 @@ drawchart drawcharlist::findonshape(QPoint po)
 
 }
 
-bool drawcharlist::ifonshape(QPoint po)
+bool drawcharlist::ifonshape(QPoint po, int type)
 {
-    for (int i=0; i < chartlist.size(); i++)
+    if (type==1)
     {
-        if (drawchart(chartlist.at(i)).onshape(po)) return true;
+        for (int i=0; i < chartlist.size(); i++)
+        {
+            if (drawchart(chartlist.at(i)).type==1 && drawchart(chartlist.at(i)).onshape(po)) return true;
+        }
     }
+    else
+    {
+        for (int i=0; i < chartlist.size(); i++)
+        {
+            if (drawchart(chartlist.at(i)).onshape(po)) return true;
+        }
+    }
+
     return false;
 }
 
@@ -40,8 +52,9 @@ drawchart drawcharlist::findonrec(QPoint po)
     }
     drawchart tmp;
     return tmp;
-
 }
+
+
 bool drawcharlist::ifonrec(QPoint po)
 {
     for (int i=0; i < chartlist.size(); i++)
@@ -56,7 +69,8 @@ void drawcharlist::update(drawchart oldchart, drawchart newchart)
     for (int i=0; i < chartlist.size(); i++)
     {
         if ((drawchart(chartlist.at(i))).p1.x() == oldchart.p1.x() && (drawchart(chartlist.at(i))).p1.y() == oldchart.p1.y()
-              && (drawchart(chartlist.at(i))).p2.x() == oldchart.p2.x() && (drawchart(chartlist.at(i))).p2.y() == oldchart.p2.y())
+              && (drawchart(chartlist.at(i))).p2.x() == oldchart.p2.x() && (drawchart(chartlist.at(i))).p2.y() == oldchart.p2.y()
+                && (drawchart(chartlist.at(i))).type == oldchart.type)
         {
             chartlist.at(i)=newchart;
         }

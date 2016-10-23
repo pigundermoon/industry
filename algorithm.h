@@ -1,4 +1,6 @@
-
+#include "dcmtk/config/osconfig.h"
+#include "dcmtk/dcmdata/dctk.h"
+#include "dcmtk/dcmimgle/dcmimage.h"
 #include "opencv.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
@@ -8,6 +10,8 @@
 #include "algorithm"
 #include "QString"
 #include "QStringList"
+#include "fstream"
+#include "QDateTime"
 
 
 using namespace cv;
@@ -16,8 +20,25 @@ using namespace std;
 #ifndef ALGORITHM
 #define ALGORITHM
 
+class rawfile
+{
+public:
+    void readfile(QString filepath);
+    void resavedcm(QString filepath, QDateTime dt, QString tgtpath);
+    QString scanid;
+    int height;
+    int width;
+    cv::Mat_<unsigned short> img;
+};
 
 extern bool ifinvert;
+
+extern void homotransfer(Mat_<unsigned short> & s, float degree);
+
+extern void emboss(Mat_<unsigned short> &s, int dis, int range);
+
+
+
 
 //操作序列解析
 //$0:1,2,3,4($分隔操作，：分隔函数名与参数，，分隔参数)

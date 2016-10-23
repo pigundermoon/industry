@@ -66,7 +66,9 @@ SOURCES += main.cpp \
     dcmtkfile.cpp \
     recdcmtkfile.cpp \
     database.cpp \
-    buttonactionadapter.cpp
+    buttonactionadapter.cpp \
+    ui_sliderchoose.cpp \
+    ui_emboss.cpp
 
 
 HEADERS  += dcmtkfile.h \
@@ -84,7 +86,9 @@ HEADERS  += dcmtkfile.h \
     algorithm.h \
     recdcmtkfile.h \
     database.h \
-    buttonactionadapter.h
+    buttonactionadapter.h \
+    ui_sliderchoose.h \
+    ui_emboss.h
 
 
 FORMS    += \
@@ -96,7 +100,9 @@ FORMS    += \
     ui_denoise.ui \
     ui_about.ui \
     processing.ui \
-    mainwindow.ui
+    mainwindow.ui \
+    ui_sliderchoose.ui \
+    ui_emboss.ui
 
 RESOURCES += \
     src.qrc

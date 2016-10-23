@@ -13,6 +13,8 @@
 #include "ui_contrast.h"
 #include "ui_denoise.h"
 #include "ui_about.h"
+#include "ui_sliderchoose.h"
+#include "ui_emboss.h"
 #include "QListWidget"
 #include "processing.h"
 #include <QtConcurrent/QtConcurrent>
@@ -113,6 +115,22 @@ private slots:
 
     void on_resetdraw_triggered();
 
+    void on_rulergra_triggered();
+
+    void r_degree(float degree);
+
+    void r_ok_degree(float degree);
+
+    void r_emboss_value(int dis, int contrast);
+
+    void r_ok_emboss_value(int dis, int contrast);
+
+    void on_homotran_triggered();
+
+    void on_emboss_triggered();
+
+    void on_scan_triggered();
+
 signals:
     void s_imageshort(cv::Mat_<unsigned short>);
     void s_imageshort_hist(cv::Mat_<unsigned short>, unsigned short indark,unsigned short ingray,unsigned short inwhite,unsigned short outdark, unsigned short outwhite);
@@ -130,6 +148,8 @@ private:
     ui_imageinfo* w4;
     processing* w_process;
     ui_about* w5;
+    ui_sliderchoose* w6;
+    ui_emboss* w7;
     ui_contrast* w_contrast;
     ui_denoise* w_denoise;
 
@@ -170,6 +190,9 @@ private:
     bool listchangedflag;
 
     //绘图相关
+    int draw_dhw;
+    int draw_height;
+    int draw_dhwnum;
     drawcharlist cur_chartlist;
     drawchart oldchart;
     void update_chartlist(QString chart);
@@ -179,7 +202,7 @@ private:
     void drawpaint(QPainter* painter);
     bool drawst;
 
-
+    bool graruler;//标尺
 
 
 
