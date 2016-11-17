@@ -13,7 +13,7 @@ QT       += sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = industry
+TARGET =  PKU-DREAM
 TEMPLATE = app
 
 QMAKE_CXXFLAGS_RELEASE = -MD
@@ -33,6 +33,8 @@ LIBS+=  wsock32.lib \
 #LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_core2410d.lib)
 #LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_highgui2410d.lib)
 #LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_imgproc2410d.lib)
+#LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_stitching2410d.lib)
+#LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_legacy2410d.lib)
 #LIBS += $$quote(C:\software\small tools\tiff\lib\libtiff.lib)
 #LIBS+=  $$quote(C:\Program Files (x86)\DCMTK_DEBUG\lib\ofstd.lib) \
 #        $$quote(C:\Program Files (x86)\DCMTK_DEBUG\lib\oflog.lib) \
@@ -41,6 +43,8 @@ LIBS+=  wsock32.lib \
 LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_core2410.lib)
 LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_highgui2410.lib)
 LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_imgproc2410.lib)
+LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_stitching2410.lib)
+LIBS += $$quote(C:\software\coding toools\opencv\build\x86\vc12\lib\opencv_legacy2410.lib)
 LIBS += $$quote(C:\software\small tools\tiff\lib\libtiff.lib)
 LIBS+=  $$quote(C:\Program Files (x86)\DCMTK\lib\ofstd.lib) \
         $$quote(C:\Program Files (x86)\DCMTK\lib\oflog.lib) \
@@ -68,7 +72,10 @@ SOURCES += main.cpp \
     database.cpp \
     buttonactionadapter.cpp \
     ui_sliderchoose.cpp \
-    ui_emboss.cpp
+    ui_emboss.cpp \
+    homo_clip.cpp \
+    showimgwindow.cpp \
+    ui_compare_show.cpp
 
 
 HEADERS  += dcmtkfile.h \
@@ -88,7 +95,21 @@ HEADERS  += dcmtkfile.h \
     database.h \
     buttonactionadapter.h \
     ui_sliderchoose.h \
-    ui_emboss.h
+    ui_emboss.h \
+    homo_clip.h \
+    ZQ_CubicInterpolation.h \
+    ZQ_DoubleImage.h \
+    ZQ_ImageIO.h \
+    ZQ_ImageProcessing.h \
+    ZQ_MathBase.h \
+    ZQ_PCGSolver.h \
+    ZQ_SparseMatrix.h \
+    ZQ_StructureFromTexture.h \
+    ZQ_StructureFromTextureOptions.h \
+    ZQ_taucs.h \
+    ZQ_TaucsBase.h \
+    showimgwindow.h \
+    ui_compare_show.h
 
 
 FORMS    += \
@@ -102,10 +123,14 @@ FORMS    += \
     processing.ui \
     mainwindow.ui \
     ui_sliderchoose.ui \
-    ui_emboss.ui
+    ui_emboss.ui \
+    homo_clip.ui \
+    showimgwindow.ui \
+    ui_compare_show.ui
 
 RESOURCES += \
     src.qrc
+
 
 
 

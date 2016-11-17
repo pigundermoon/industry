@@ -3,7 +3,9 @@
 #include "dcmtk/dcmimgle/dcmimage.h"
 #include "opencv.hpp"
 #include "opencv2/highgui/highgui.hpp"
+#include "opencv2/stitching/stitcher.hpp"
 #include "opencv2/core/core.hpp"
+#include "opencv2/legacy/legacy.hpp"
 #include "QImage"
 #include "QPoint"
 #include "QtConcurrent/QtConcurrent"
@@ -12,16 +14,26 @@
 #include "QStringList"
 #include "fstream"
 #include "QDateTime"
+#include "QStringList"
+#include "vector"
+#include "QDebug"
+#include "ZQ_StructureFromTexture.h"
+#include "ZQ_StructureFromTextureOptions.h"
+#include "ZQ_ImageIO.h"
+#include <time.h>
+#include <iostream>
 
 
+using namespace ZQ;
 using namespace cv;
 using namespace std;
 
 #ifndef ALGORITHM
 #define ALGORITHM
 
-class rawfile
+class rawfile : public QObject
 {
+    Q_OBJECT
 public:
     void readfile(QString filepath);
     void resavedcm(QString filepath, QDateTime dt, QString tgtpath);
@@ -39,27 +51,14 @@ extern void emboss(Mat_<unsigned short> &s, int dis, int range);
 
 
 
-
 //操作序列解析
 //$0:1,2,3,4($分隔操作，：分隔函数名与参数，，分隔参数)
 extern cv::Mat_<unsigned short> parse_operationstr(QString operation, cv::Mat_<unsigned short> img);
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//自动设定窗宽窗位算法
+extern void auto_reset_graparas(Mat_<unsigned short>srcimgshort,unsigned short &indark,unsigned short &inwhite);
 
 //色阶调整算法
 #define kernelSize 4;
@@ -77,7 +76,16 @@ extern void divcurve(int istart,int iend,int jstart,int jend, Mat_<unsigned shor
 extern void levelAdjustment(Mat_<unsigned short>  input, Mat_<unsigned short> & output, unsigned short inputDark, unsigned short inputGray,unsigned short inputLight,  unsigned short outDark, unsigned short outLight);
 
 
+//金字塔分割
+extern Mat_<unsigned short> doPyrSegmentation( Mat_<unsigned short> src);
+
 //去噪算法
+//双边滤波
+extern Mat_<unsigned short> bidenoise(Mat img);
+//傅里叶
+extern Mat_<unsigned short> fdenoise(Mat img,float D0 = 2 * 200 * 400);
+//RTV
+extern Mat_<unsigned short> RTV(Mat_<unsigned short> img, int degree);
 
 //extern Mat_<unsigned short> RTV_denoise(Mat_<unsigned short> input, float lambda = 0.01, float sigma = 3, float sharpness = 0.02, int maxIter = 4);
 //extern void computeTextureWeights(Mat_<float> fin, float sigma, float sharpness, Mat_<float> wtbx, Mat_<float> wtby);

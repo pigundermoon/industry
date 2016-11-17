@@ -28,6 +28,12 @@
        <height>54</height>
       </size>
      </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
      <property name="title">
       <string>增强等级</string>
      </property>
@@ -45,6 +51,12 @@
           <width>15</width>
           <height>15</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
         </property>
         <property name="styleSheet">
          <string notr="true">background-color: rgb(107, 107, 107);
@@ -75,6 +87,12 @@ border:0px;</string>
           <width>130</width>
           <height>16777215</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
         </property>
         <property name="minimum">
          <number>1</number>
@@ -110,6 +128,12 @@ border:0px;</string>
           <height>15</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
         <property name="styleSheet">
          <string notr="true">background-color: rgb(107, 107, 107);
 color:white;
@@ -134,6 +158,12 @@ border:0px;</string>
           <height>16777215</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
         <property name="mouseTracking">
          <bool>true</bool>
         </property>
@@ -153,11 +183,23 @@ border:0px;</string>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <widget class="QPushButton" name="ok_button">
         <property name="enabled">
-         <bool>false</bool>
+         <bool>true</bool>
+        </property>
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
         </property>
         <property name="text">
          <string>确认</string>
@@ -169,6 +211,12 @@ border:0px;</string>
       </item>
       <item>
        <widget class="QPushButton" name="cancel_button">
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>取消</string>
         </property>

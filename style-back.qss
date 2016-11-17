@@ -1,4 +1,13 @@
-﻿QMenuBar
+﻿
+QMainWindow{
+    background-color:rgb(150, 150, 150);
+}
+
+QDockWidget::title {
+    background: lightgray;
+}
+
+QMenuBar
 {
     background-color:rgb(150, 150, 150);
     font-family: 微软雅黑;
@@ -311,7 +320,7 @@ QWidget#imagelist::item:selected
 
 QTreeView#fileexplorer
 {
-    background: white;
+    background: rgb(160, 160, 160);
     show-decoration-selected: 1;
     outline:0;
 }
@@ -319,7 +328,7 @@ QTreeView#fileexplorer
 QHeaderView::section
 {
     padding: 5px;
-    background: rgba(219, 219, 219, 255);
+    background: rgba(100, 100, 100, 255);
     border:0px;
     font-family: 微软雅黑;
     font-size: 15px;
@@ -332,7 +341,7 @@ QTreeView::item
 }
 QTreeView::item:selected
 {
+    color:white;
     background: rgba(75, 75, 75, 255);
     border: 0px;
-
 }

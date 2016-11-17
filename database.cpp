@@ -64,7 +64,7 @@ bool drawcharlist::ifonrec(QPoint po)
     return false;
 }
 
-void drawcharlist::update(drawchart oldchart, drawchart newchart)
+void drawcharlist::update(drawchart oldchart, drawchart newchart, int type)
 {
     for (int i=0; i < chartlist.size(); i++)
     {
@@ -72,7 +72,8 @@ void drawcharlist::update(drawchart oldchart, drawchart newchart)
               && (drawchart(chartlist.at(i))).p2.x() == oldchart.p2.x() && (drawchart(chartlist.at(i))).p2.y() == oldchart.p2.y()
                 && (drawchart(chartlist.at(i))).type == oldchart.type)
         {
-            chartlist.at(i)=newchart;
+            if (type == 1) chartlist.erase(chartlist.begin()+i);
+            else chartlist.at(i)=newchart;
         }
     }
 }
@@ -103,8 +104,44 @@ bool database::initialize()
     return true;
 }
 
+imageitem database::query_imageitem(QString name)
+{
+    imageitem item;
+    item.exist=true;
+    QSqlDatabase db = QSqlDatabase::database("industry_sql");
+    if (!db.open())
+    {
+        cerr<<"open failed!"<<endl;
+        item.exist=false;
+        return item;
+    }
+    QSqlQuery query(db);
 
-imageitem database::query_imageitem(QString path)
+    query.prepare("select name, id, path, date, operation, chart from imagelist where name = :name");
+    query.bindValue(":name",QString::fromLocal8Bit(name.toLocal8Bit().data()));
+
+    bool success = query.exec();
+    if (!success || !query.first())
+    {
+        cerr<<"select failed!"<<endl;
+        qDebug()<<query.lastError()<<endl;
+        item.exist=false;
+        return item;
+    }
+
+    item.name = query.value(0).toString();
+    item.id = query.value(1).toString();
+    item.path = query.value(2).toString();
+    item.date = query.value(3).toString();
+    item.operation = query.value(4).toString();
+    item.chart = query.value(5).toString();
+
+    db.close();
+    return item;
+
+}
+
+imageitem database::query_imageitembypath(QString path)
 {
     imageitem item;
     item.exist=true;

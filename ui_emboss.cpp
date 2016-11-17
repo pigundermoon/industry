@@ -12,7 +12,20 @@ ui_emboss::~ui_emboss()
 {
     delete ui;
 }
-
+void ui_emboss::on_dem_clicked()
+{
+    int position=ui->de->value()-1;
+    position=position<ui->de->maximum()?position:ui->de->maximum();
+    position=position>ui->de->minimum()?position:ui->de->minimum();
+    ui->de->setValue(position);
+}
+void ui_emboss::on_dep_clicked()
+{
+    int position=ui->de->value()+1;
+    position=position<ui->de->maximum()?position:ui->de->maximum();
+    position=position>ui->de->minimum()?position:ui->de->minimum();
+    ui->de->setValue(position);
+}
 void ui_emboss::on_minus_clicked()
 {
     int position=ui->dis->value()-1;
@@ -45,6 +58,13 @@ void ui_emboss::on_cplus_clicked()
     ui->contrast->setValue(position);
 }
 
+void ui_emboss::on_del_editingFinished()
+{
+    int position=ui->del->text().toInt();
+    position=position<ui->de->maximum()?position:ui->de->maximum();
+    position=position>ui->de->minimum()?position:ui->de->minimum();
+    ui->de->setValue(position);
+}
 void ui_emboss::on_lineEdit_editingFinished()
 {
     int position=ui->lineEdit->text().toInt();
@@ -60,7 +80,14 @@ void ui_emboss::on_clineEdit_editingFinished()
     position=position>ui->contrast->minimum()?position:ui->contrast->minimum();
     ui->contrast->setValue(position);
 }
-
+void ui_emboss::on_de_valueChanged(int value)
+{
+    ui->del->setText(QString::number(value));
+    int dis = value*2-1;if (dis==9) dis=10;
+    int contrast = 200*value-100;if (contrast>500) contrast=500;
+    ui->dis->setValue(dis);
+    ui->contrast->setValue(contrast);
+}
 void ui_emboss::on_dis_valueChanged(int value)
 {
     ui->lineEdit->setText(QString::number(value));
@@ -85,3 +112,10 @@ void ui_emboss::on_cancel_button_clicked()
     emit s_cancel();
     this->close();
 }
+
+
+
+
+
+
+

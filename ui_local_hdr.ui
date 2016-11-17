@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>297</width>
-    <height>133</height>
+    <width>299</width>
+    <height>138</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,8 +19,14 @@
      <x>10</x>
      <y>10</y>
      <width>183</width>
-     <height>54</height>
+     <height>61</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="title">
     <string>调整曝光度</string>
@@ -39,6 +45,12 @@
         <width>15</width>
         <height>15</height>
        </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
       </property>
       <property name="styleSheet">
        <string notr="true">background-color: rgb(107, 107, 107);
@@ -63,6 +75,12 @@ border:0px;</string>
         <width>121</width>
         <height>16777215</height>
        </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
       </property>
       <property name="minimum">
        <number>1</number>
@@ -98,6 +116,12 @@ border:0px;</string>
         <height>15</height>
        </size>
       </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
       <property name="styleSheet">
        <string notr="true">background-color: rgb(107, 107, 107);
 color:white;
@@ -122,6 +146,12 @@ border:0px;</string>
         <height>16777215</height>
        </size>
       </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>20</string>
       </property>
@@ -135,8 +165,14 @@ border:0px;</string>
      <x>10</x>
      <y>70</y>
      <width>183</width>
-     <height>54</height>
+     <height>61</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="title">
     <string>调整边缘强度</string>
@@ -155,6 +191,12 @@ border:0px;</string>
         <width>15</width>
         <height>15</height>
        </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
       </property>
       <property name="styleSheet">
        <string notr="true">background-color: rgb(107, 107, 107);
@@ -179,6 +221,12 @@ border:0px;</string>
         <width>121</width>
         <height>16777215</height>
        </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
       </property>
       <property name="minimum">
        <number>1</number>
@@ -214,6 +262,12 @@ border:0px;</string>
         <height>15</height>
        </size>
       </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
       <property name="styleSheet">
        <string notr="true">background-color: rgb(107, 107, 107);
 color:white;
@@ -238,6 +292,12 @@ border:0px;</string>
         <height>16777215</height>
        </size>
       </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>80</string>
       </property>
@@ -248,8 +308,8 @@ border:0px;</string>
   <widget class="QWidget" name="widget" native="true">
    <property name="geometry">
     <rect>
-     <x>190</x>
-     <y>30</y>
+     <x>200</x>
+     <y>40</y>
      <width>93</width>
      <height>70</height>
     </rect>
@@ -260,11 +320,23 @@ border:0px;</string>
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
+   <property name="font">
+    <font>
+     <family>微软雅黑</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QPushButton" name="ok_button">
       <property name="enabled">
-       <bool>false</bool>
+       <bool>true</bool>
+      </property>
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
       </property>
       <property name="text">
        <string>确认</string>
@@ -276,6 +348,12 @@ border:0px;</string>
     </item>
     <item>
      <widget class="QPushButton" name="cancel_button">
+      <property name="font">
+       <font>
+        <family>微软雅黑</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>取消</string>
       </property>
@@ -285,23 +363,6 @@ border:0px;</string>
      </widget>
     </item>
    </layout>
-  </widget>
-  <widget class="QTextEdit" name="time">
-   <property name="geometry">
-    <rect>
-     <x>330</x>
-     <y>10</y>
-     <width>341</width>
-     <height>321</height>
-    </rect>
-   </property>
-   <property name="html">
-    <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'SimSun'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
   </widget>
  </widget>
  <resources/>

@@ -22,11 +22,43 @@ int upbound[65536];
 int lowbound[65536];
 
 //打表法模拟PS对比度 按照PS里面的调整范围-50<=contrast<=100
-void contrast(Mat_<unsigned short> & input, Mat_<unsigned short> & output, int contrast)
+void contrast(Mat_<unsigned short> & input, Mat_<unsigned short> & output, int contrast, int point = 32768)
 {
     input.copyTo(output);
     if (contrast == 0) return;
     contrast = MAX(-100, MIN(100, contrast));
+    if (point != 32768)
+    {
+        if (point<1) point =1;
+        if (point >65534) point = 65534;
+        for (int i=0; i<65536;i++)
+        {
+            if (i<=point)
+            {
+                int correpoint = float(float(i*32768)/float(point))/255;
+                upbound[i] = float(c_up_bound[correpoint]*point)/32768;
+                if (upbound[i]<0) upbound[i]=0;
+                if (upbound[i]>255) upbound[i] = 255;
+                upbound[i]*=255;
+                lowbound[i] = float(c_low_bound[correpoint]*point)/32768;
+                if (lowbound[i]<0) lowbound[i]=0;
+                if (lowbound[i]>255) lowbound[i] = 255;
+                lowbound[i]*=255;
+            }
+            else
+            {
+                int correpoint =  float( (float(i-point)/float(65535-point))*32767+32768) / 255;
+                upbound[i] = float(c_up_bound[correpoint]-128)*float(65535-point)/32767+float(point)/255;
+                if (upbound[i]<0) upbound[i]=0;
+                if (upbound[i]>255) upbound[i] = 255;
+                upbound[i]*=255;
+                lowbound[i] =float(c_low_bound[correpoint]-128)*float(65535-point)/32767+float(point)/255;
+                if (lowbound[i]<0) lowbound[i]=0;
+                if (lowbound[i]>255) lowbound[i] = 255;
+                lowbound[i]*=255;
+            }
+        }
+    }
 
     double ratio = abs(contrast) / 100.0;
     //调整程度关于contrast不是线性的，用二次曲线来拟合，得到变化比率ratio
@@ -48,6 +80,7 @@ void contrast(Mat_<unsigned short> & input, Mat_<unsigned short> & output, int c
         {
             output(i, j) =vmap[input(i,j)] ;
         }
+
 }
 
 
@@ -72,15 +105,29 @@ void ui_contrast::r_imageshort(cv::Mat_<unsigned short> a)
         lowbound[i]=int(double(c_low_bound[int(double(i)/65535*255)])/255*65535);
     }
     srcimg=a;
-    contrast(srcimg,outputimg,ui->level->value());
-    emit s_imageshort(outputimg);
+    srcimg.copyTo(outputimg);
+
+}
+
+void ui_contrast::r_contrast_para(int pos)
+{
+    midpoint = pos;
 }
 
 void ui_contrast::on_level_valueChanged(int value)
 {
     ui->lineEdit->setText(QString::number(value));
-    contrast(srcimg,outputimg,value);
-    emit s_imageshort(outputimg);
+    if (value!=0)
+    {
+        contrast(srcimg,outputimg,value,midpoint);
+        emit s_imageshort(outputimg);
+    }
+    else
+    {
+        srcimg.copyTo(outputimg);
+        cout<<"s!"<<endl;
+        emit s_imageshort(outputimg);
+    }
 }
 void ui_contrast::on_minus_clicked()
 {
@@ -111,7 +158,7 @@ void ui_contrast::on_lineEdit_editingFinished()
 
 void ui_contrast::on_ok_button_clicked()
 {
-    QString opt = "$4:"+QString::number(ui->level->value());
+    QString opt = "$4:"+QString::number(ui->level->value())+','+QString::number(midpoint);
     emit s_ok(outputimg,opt);
     this->close();
 }

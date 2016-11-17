@@ -40,7 +40,7 @@ public:
     vector<drawchart> chartlist;
     void clear(){chartlist.clear();}
     void insert(drawchart temp){chartlist.push_back(temp);}
-    void update(drawchart oldchart, drawchart newchart);
+    void update(drawchart oldchart, drawchart newchart, int type = 0);
     bool ifonshape(QPoint po, int type=0);
     drawchart findonshape(QPoint po);
     bool ifonrec(QPoint po);
@@ -55,7 +55,8 @@ public:
     bool initialize();
     bool insert_imageitem(imageitem item);
     bool update_imageitem(imageitem item);
-    imageitem query_imageitem(QString path);
+    imageitem query_imageitem(QString name);
+    imageitem query_imageitembypath(QString path);
     QStringList query_all();
 
 };

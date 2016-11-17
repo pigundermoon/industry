@@ -16,6 +16,11 @@
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
+  <property name="font">
+   <font>
+    <pointsize>10</pointsize>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>工业探伤</string>
   </property>
@@ -33,12 +38,24 @@
    <layout class="QGridLayout" name="gridLayout_5" columnstretch="1,5">
     <item row="0" column="1">
      <widget class="QWidget" name="widget_2" native="true">
-      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
        <property name="topMargin">
         <number>0</number>
        </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
        <item>
-        <widget class="QWidget" name="widget" native="true">
+        <widget class="QWidget" name="showimg" native="true">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -74,8 +91,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>953</width>
-               <height>330</height>
+               <width>971</width>
+               <height>420</height>
               </rect>
              </property>
              <layout class="QGridLayout" name="gridLayout">
@@ -97,9 +114,9 @@
                  <bool>true</bool>
                 </property>
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                   <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
+                  <verstretch>10</verstretch>
                  </sizepolicy>
                 </property>
                 <property name="layoutDirection">
@@ -124,276 +141,29 @@
         </widget>
        </item>
        <item>
-        <widget class="QWidget" name="playerBar" native="true">
-         <property name="styleSheet">
-          <string notr="true">QWidget#playerBar {border: 2px solid rbg(55, 55, 55);}</string>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <property name="leftMargin">
-           <number>6</number>
-          </property>
-          <property name="topMargin">
-           <number>6</number>
-          </property>
-          <property name="rightMargin">
-           <number>6</number>
-          </property>
-          <property name="bottomMargin">
-           <number>6</number>
-          </property>
-          <item>
-           <widget class="QPushButton" name="first">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QPushButton {border-image: url(:/img/img/first_normal.png);}
-QPushButton:hover:!pressed {border-image: url(:/img/img/first_hover.png);}
-QPushButton:hover:pressed {border-image: url(:/img/img/first_down.png);}
-QPushButton {width:30px;height:30px;}</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="previous">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QPushButton {border-image: url(:/img/img/previous_normal.png);}
-QPushButton:hover:!pressed {border-image: url(:/img/img/previous_hover.png);}
-QPushButton:hover:pressed {border-image: url(:/img/img/previous_down.png);}
-QPushButton {width:30px;height:30px;}</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pause">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QPushButton {border-image: url(:/img/img/pause_normal.png);}
-QPushButton:hover:!pressed {border-image: url(:/img/img/pause_hover.png);}
-QPushButton:hover:pressed {border-image: url(:/img/img/pause_down.png);}
-QPushButton:checked {border-image: url(:/img/img/pause_down.png);}
-QPushButton {width:30px;height:30px;}</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="play">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QPushButton {border-image: url(:/img/img/play_normal.png);}
-QPushButton:hover:!pressed {border-image: url(:/img/img/play_hover.png);}
-QPushButton:hover:pressed {border-image: url(:/img/img/play_down.png);}
-QPushButton:checked {border-image: url(:/img/img/play_down.png);}
-QPushButton {width:30px;height:30px;}</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="next">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QPushButton {border-image: url(:/img/img/next_normal.png);}
-QPushButton:hover:!pressed {border-image: url(:/img/img/next_hover.png);}
-QPushButton:hover:pressed {border-image: url(:/img/img/next_down.png);}
-QPushButton {width:30px;height:30px;}</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="last">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QPushButton {border-image: url(:/img/img/last_normal.png);}
-QPushButton:hover:!pressed {border-image: url(:/img/img/last_hover.png);}
-QPushButton:hover:pressed {border-image: url(:/img/img/last_down.png);}
-QPushButton {width:30px;height:30px;}</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="Line" name="line">
-            <property name="styleSheet">
-             <string notr="true">background-color:rgb(55, 55, 55);
-width:1;
-margin-top:2;
-margin-bottom:2;
-margin-left:5;
-margin-right:5
-</string>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label">
-            <property name="font">
-             <font>
-              <family>微软雅黑</family>
-              <pointsize>11</pointsize>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">color: rgb(255, 255, 255);</string>
-            </property>
-            <property name="text">
-             <string>播放速度</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="lineEdit">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <family>微软雅黑</family>
-              <pointsize>11</pointsize>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">color: rgb(255, 255, 255);
-background-color: rgb(55, 55, 55);
-margin: 6px;
-width:25px</string>
-            </property>
-            <property name="frame">
-             <bool>false</bool>
-            </property>
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_2">
-            <property name="font">
-             <font>
-              <family>微软雅黑</family>
-              <pointsize>11</pointsize>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">color: rgb(255, 255, 255);</string>
-            </property>
-            <property name="text">
-             <string>秒每帧</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushButton">
-            <property name="styleSheet">
-             <string notr="true">QPushButton {border-image: url(:/img/img/decelerate_normal.png);}
-QPushButton:hover:!pressed {border-image: url(:/img/img/decelerate_hover.png);}
-QPushButton:hover:pressed {border-image: url(:/img/img/decelerate_down.png);}
-QPushButton {width:30px;height:30px;}</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushButton_2">
-            <property name="styleSheet">
-             <string notr="true">QPushButton {border-image: url(:/img/img/accelerate_normal.png);}
-QPushButton:hover:!pressed {border-image: url(:/img/img/accelerate_hover.png);}
-QPushButton:hover:pressed {border-image: url(:/img/img/accelerate_down.png);}
-QPushButton {width:30px;height:30px;}</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>30</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
         <widget class="QTreeView" name="fileexplorer">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
            <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
+           <verstretch>2</verstretch>
           </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>11</pointsize>
+          </font>
          </property>
          <property name="sortingEnabled">
           <bool>true</bool>
          </property>
+         <property name="headerHidden">
+          <bool>false</bool>
+         </property>
          <attribute name="headerCascadingSectionResizes">
           <bool>false</bool>
+         </attribute>
+         <attribute name="headerDefaultSectionSize">
+          <number>230</number>
          </attribute>
         </widget>
        </item>
@@ -417,6 +187,32 @@ QPushButton {width:30px;height:30px;}</string>
      </widget>
     </item>
    </layout>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="contextMenuPolicy">
+    <enum>Qt::PreventContextMenu</enum>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="floatable">
+    <bool>true</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="enabled">
@@ -463,12 +259,13 @@ QPushButton {width:30px;height:30px;}</string>
       <string>HDR           </string>
      </property>
      <addaction name="localadaptive_hdr"/>
-     <addaction name="separator"/>
      <addaction name="hist_hdr"/>
     </widget>
     <addaction name="hist"/>
+    <addaction name="autogra"/>
+    <addaction name="resetgra"/>
+    <addaction name="grawidlock"/>
     <addaction name="hdr"/>
-    <addaction name="rulergra"/>
     <addaction name="emboss"/>
    </widget>
    <widget class="QMenu" name="menu_3">
@@ -481,19 +278,21 @@ QPushButton {width:30px;height:30px;}</string>
     <property name="title">
      <string>图像增强</string>
     </property>
-    <widget class="QMenu" name="rgradation">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
+    <widget class="QMenu" name="denoise_2">
      <property name="title">
-      <string>去阶梯化</string>
+      <string>去噪            </string>
      </property>
-     <addaction name="mark"/>
-     <addaction name="removegrade"/>
+     <addaction name="basicdenoise"/>
+     <addaction name="cycle_strong"/>
+     <addaction name="cycle_mid"/>
+     <addaction name="cycle_weak"/>
+     <addaction name="RTV_strong"/>
+     <addaction name="RTV_mid"/>
+     <addaction name="RTV_weak"/>
     </widget>
     <addaction name="contrast"/>
-    <addaction name="denoise"/>
-    <addaction name="rgradation"/>
+    <addaction name="denoise_2"/>
+    <addaction name="cascade"/>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="autoFillBackground">
@@ -513,15 +312,13 @@ QPushButton {width:30px;height:30px;}</string>
       <string>翻转            </string>
      </property>
      <addaction name="turn_horizontal"/>
-     <addaction name="separator"/>
      <addaction name="turn_vertical"/>
     </widget>
     <addaction name="invert"/>
     <addaction name="turn"/>
-    <addaction name="drawrect"/>
-    <addaction name="resetdraw"/>
     <addaction name="homotran"/>
     <addaction name="back"/>
+    <addaction name="rawimg"/>
    </widget>
    <widget class="QMenu" name="menu">
     <property name="autoFillBackground">
@@ -535,6 +332,8 @@ QPushButton {width:30px;height:30px;}</string>
     </property>
     <addaction name="openfile"/>
     <addaction name="scan"/>
+    <addaction name="loaddata"/>
+    <addaction name="loaddata_reset"/>
     <addaction name="resave"/>
     <addaction name="info"/>
     <addaction name="exit"/>
@@ -545,37 +344,22 @@ QPushButton {width:30px;height:30px;}</string>
     </property>
     <addaction name="about"/>
    </widget>
+   <widget class="QMenu" name="menu_6">
+    <property name="title">
+     <string>测量</string>
+    </property>
+    <addaction name="rulergra"/>
+    <addaction name="drawrect"/>
+    <addaction name="resetdraw"/>
+    <addaction name="bigshow"/>
+    <addaction name="compareshow"/>
+   </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
    <addaction name="menu_3"/>
    <addaction name="menu_4"/>
+   <addaction name="menu_6"/>
    <addaction name="menu_5"/>
-  </widget>
-  <widget class="QToolBar" name="toolBar">
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="contextMenuPolicy">
-    <enum>Qt::PreventContextMenu</enum>
-   </property>
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
-   <property name="movable">
-    <bool>false</bool>
-   </property>
-   <property name="floatable">
-    <bool>true</bool>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
   </widget>
   <action name="openfile">
    <property name="text">
@@ -587,7 +371,10 @@ QPushButton {width:30px;height:30px;}</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>另存为           </string>
+    <string>另存为</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="info">
@@ -624,14 +411,6 @@ QPushButton {width:30px;height:30px;}</string>
     <bool>false</bool>
    </property>
   </action>
-  <action name="denoise">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>去噪            </string>
-   </property>
-  </action>
   <action name="invert">
    <property name="enabled">
     <bool>false</bool>
@@ -652,7 +431,7 @@ QPushButton {width:30px;height:30px;}</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>调整色阶          </string>
+    <string>调整色阶</string>
    </property>
   </action>
   <action name="back">
@@ -660,7 +439,10 @@ QPushButton {width:30px;height:30px;}</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>回退            </string>
+    <string>重置</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Z</string>
    </property>
   </action>
   <action name="localadaptive_hdr">
@@ -740,6 +522,9 @@ QPushButton {width:30px;height:30px;}</string>
    <property name="text">
     <string>放大</string>
    </property>
+   <property name="shortcut">
+    <string>Alt+=</string>
+   </property>
   </action>
   <action name="zoom_out">
    <property name="icon">
@@ -749,6 +534,9 @@ QPushButton {width:30px;height:30px;}</string>
    <property name="text">
     <string>缩小</string>
    </property>
+   <property name="shortcut">
+    <string>Alt+-</string>
+   </property>
   </action>
   <action name="zoom">
    <property name="icon">
@@ -757,6 +545,9 @@ QPushButton {width:30px;height:30px;}</string>
    </property>
    <property name="text">
     <string>原始大小</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+0</string>
    </property>
   </action>
   <action name="rotate_tool">
@@ -843,7 +634,7 @@ QPushButton {width:30px;height:30px;}</string>
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>错切变换</string>
+    <string>错切</string>
    </property>
   </action>
   <action name="emboss">
@@ -857,6 +648,125 @@ QPushButton {width:30px;height:30px;}</string>
   <action name="scan">
    <property name="text">
     <string>扫描</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="grawidlock">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>窗宽锁定</string>
+   </property>
+  </action>
+  <action name="loaddata">
+   <property name="text">
+    <string>归档</string>
+   </property>
+  </action>
+  <action name="loaddata_reset">
+   <property name="text">
+    <string>归档重置</string>
+   </property>
+  </action>
+  <action name="resetgra">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>色阶重置</string>
+   </property>
+  </action>
+  <action name="cascade">
+   <property name="text">
+    <string>拼接</string>
+   </property>
+  </action>
+  <action name="autogra">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>自动色阶</string>
+   </property>
+  </action>
+  <action name="basicdenoise">
+   <property name="text">
+    <string>基础降噪</string>
+   </property>
+  </action>
+  <action name="action_2">
+   <property name="text">
+    <string>强</string>
+   </property>
+  </action>
+  <action name="action_3">
+   <property name="text">
+    <string>中</string>
+   </property>
+  </action>
+  <action name="action_4">
+   <property name="text">
+    <string>弱</string>
+   </property>
+  </action>
+  <action name="cycle_strong">
+   <property name="text">
+    <string>周期噪声抑制-强</string>
+   </property>
+  </action>
+  <action name="cycle_mid">
+   <property name="text">
+    <string>周期噪声抑制-中</string>
+   </property>
+  </action>
+  <action name="cycle_weak">
+   <property name="text">
+    <string>周期噪声抑制-弱</string>
+   </property>
+  </action>
+  <action name="RTV_strong">
+   <property name="text">
+    <string>自适应降噪-强</string>
+   </property>
+  </action>
+  <action name="RTV_mid">
+   <property name="text">
+    <string>自适应降噪-中</string>
+   </property>
+  </action>
+  <action name="RTV_weak">
+   <property name="text">
+    <string>自适应降噪-弱</string>
+   </property>
+  </action>
+  <action name="rawimg">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>原图</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+Z</string>
+   </property>
+  </action>
+  <action name="bigshow">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>同步显示</string>
+   </property>
+  </action>
+  <action name="compareshow">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>对比显示</string>
    </property>
   </action>
  </widget>

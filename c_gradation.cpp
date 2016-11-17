@@ -31,6 +31,7 @@ c_gradation::c_gradation(QWidget *parent) :
     ui(new Ui::c_gradation)
 {
     ui->setupUi(this);
+
 }
 
 c_gradation::~c_gradation()
@@ -263,7 +264,7 @@ void c_gradation::r_imageshort_hist(cv::Mat_<unsigned short> a,unsigned short in
     srcimg=a;
     output=Mat_<unsigned short>(a.rows, a.cols, CV_16UC1);
 
-    rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
+    rate=log(0.5) / log(((double)(ingray) - (double)indark) / ((double)inwhite - (double)indark));
     flag=0;ui->input_white->setValue(inwhite);
 //    flag=0;ui->input_gray->setValue(ingray);
     flag=0;ui->input_black->setValue(indark);

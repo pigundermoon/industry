@@ -6,26 +6,43 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>310</width>
-    <height>130</height>
+    <width>485</width>
+    <height>127</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>10</y>
-     <width>331</width>
-     <height>141</height>
-    </rect>
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>6</number>
    </property>
-   <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;工业探伤软件&lt;/p&gt;&lt;p&gt;基于 Qt 5.5.1 （MSVC 2013, 32 位）&lt;/p&gt;&lt;p&gt;于2016年五月四日创建&lt;/p&gt;&lt;p&gt;Copyright &lt;span style=&quot; font-family:'Calibri,sans-serif'; font-size:10.5pt;&quot;&gt;©&lt;/span&gt; 2016 PKU ICST. All rights reserved. &lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   <property name="topMargin">
+    <number>3</number>
    </property>
-  </widget>
+   <property name="rightMargin">
+    <number>6</number>
+   </property>
+   <property name="bottomMargin">
+    <number>6</number>
+   </property>
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;PKU-DREAM(Digital Radiographic Enhance and Management)&lt;/p&gt;&lt;p&gt;基于 Qt 5.5.1 （MSVC 2013, 32 位）&lt;/p&gt;&lt;p&gt;于2016年五月四日创建&lt;/p&gt;&lt;p&gt;Copyright &lt;span style=&quot; font-family:'Calibri,sans-serif'; font-size:10.5pt;&quot;&gt;©&lt;/span&gt; 2016 PKU ICST. All rights reserved. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>

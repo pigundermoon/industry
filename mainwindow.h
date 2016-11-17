@@ -15,6 +15,7 @@
 #include "ui_about.h"
 #include "ui_sliderchoose.h"
 #include "ui_emboss.h"
+#include "showimgwindow.h"
 #include "QListWidget"
 #include "processing.h"
 #include <QtConcurrent/QtConcurrent>
@@ -31,8 +32,16 @@
 #include "buttonactionadapter.h"
 #include "QStandardItemModel"
 #include "vector"
+#include "QTimer"
+#include "QMutex"
+#include "QtConcurrent/QtConcurrent"
+#include "homo_clip.h"
+#include "map"
+#include "ui_compare_show.h"
+#include "QDesktopWidget"
 
-enum right_workstatus{rsta_translation=0,rsta_mark=1,rsta_drawrect=2,rsta_changerect=3,rsta_dragrect=4};
+enum right_workstatus{rsta_translation=0,rsta_mark=1,rsta_drawrect=2,rsta_changerect=3,rsta_dragrect=4,rsta_dragbarrect=5,rsta_dragcontrast=6};
+
 
 namespace Ui {
 class MainWindow;
@@ -86,8 +95,6 @@ private slots:
 
     void on_contrast_triggered();
 
-    void on_denoise_triggered();
-
     void on_about_triggered();
 
     void on_zoom_in_triggered();
@@ -131,12 +138,59 @@ private slots:
 
     void on_scan_triggered();
 
+    void on_grawidlock_triggered();
+
+    void on_timeout_load();
+
+    void r_ctimer();
+
+    void on_loaddata_triggered();
+
+    void on_loaddata_reset_triggered();
+
+    void on_resetgra_triggered();
+
+    void on_cascade_triggered();
+
+    void on_autogra_triggered();
+
+    void on_basicdenoise_triggered();
+
+    void on_cycle_strong_triggered();
+
+    void on_cycle_mid_triggered();
+
+    void on_cycle_weak_triggered();
+
+    void on_RTV_strong_triggered();
+
+    void on_RTV_mid_triggered();
+
+    void on_RTV_weak_triggered();
+
+    void on_rawimg_triggered();
+
+    void r_denoise_close_ok();
+
+    void on_bigshow_triggered();
+
+    void r_bigshow_close();
+
+    void on_compareshow_triggered();
+
 signals:
     void s_imageshort(cv::Mat_<unsigned short>);
     void s_imageshort_hist(cv::Mat_<unsigned short>, unsigned short indark,unsigned short ingray,unsigned short inwhite,unsigned short outdark, unsigned short outwhite);
     void s_hist(cv::Mat_<unsigned char>);
     void s_number(int);
     void s_imageinfo(recdcmtkfile* file);
+    void ctimer();
+    void s_homoclip_para(QString filepath, QDateTime dt, QString tgtpath);
+    void s_contrast_para(int pos);
+    void s_contrast_para_self(int pos);
+    void s_denoise_close();
+    void s_bigshowimg(QImage img);
+    void s_2_imgshort(cv::Mat_<unsigned short> im1, cv::Mat_<unsigned short> im2,double scale);
 
 private:
     Ui::MainWindow *ui;
@@ -152,6 +206,8 @@ private:
     ui_emboss* w7;
     ui_contrast* w_contrast;
     ui_denoise* w_denoise;
+    showimgwindow* w_bigshow;
+    ui_compare_show* w_compareshow;
 
     QString label_loc[4];
     int label_loc_ptr[4];
@@ -160,7 +216,7 @@ private:
     cv::Mat_<unsigned short> raw_srcimgshort;
     cv::Mat_<unsigned short> srcimgshort;
     cv::Mat_<unsigned short> cvtsrcimgchar;
-    std::deque<cv::Mat_<unsigned short>> backup;
+//    std::deque<cv::Mat_<unsigned short>> backup;
     void enableaction();
     void disableaction();
     void show_image(cv::Mat_<unsigned short> s, int type = 1, bool notcgra = true);
@@ -172,6 +228,12 @@ private:
     bool cclicked;
 
     right_workstatus rstatus;
+
+    //同步显示
+    bool ifbigshow;
+
+    //用于色阶
+    double rate;
 
     //用于去阶梯化
     int rgxmin,rgxmax;
@@ -185,6 +247,18 @@ private:
     imageitem cur_item;
     QStandardItemModel* dataset_model;//数据库浏览
     void refresh_dataset();
+
+    //扫描软件及数据库归档
+    QMutex scanflag;
+    bool scanrun;
+    QTimer* scantime;
+    void execscan();
+    bool ifresave;
+    homo_clip* homow;
+
+    //生成实时路径
+    QString genpath();
+
 
     //current item changed
     bool listchangedflag;
@@ -205,9 +279,15 @@ private:
     bool graruler;//标尺
 
 
+    //对比度
+    void r_contrast_para_self(int pos);
 
+    //色阶相关
+    bool lock_grawidth;
+    unsigned short ingray;
 
-    int ingray;
+    //去噪
+    void denoise_methods(int type=0, int degree = 0);
 
     int ow;
     int oh;

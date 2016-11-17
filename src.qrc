@@ -106,5 +106,10 @@
         <file>img/zoom_disabled.png</file>
         <file>img/zoomin_disabled.png</file>
         <file>img/zoomout_disabled.png</file>
+        <file>img/raw_down.png</file>
+        <file>img/raw_hover.png</file>
+        <file>img/raw_normal.png</file>
+        <file>img/raw_disabled.png</file>
+        <file>img/loading.gif</file>
     </qresource>
 </RCC>

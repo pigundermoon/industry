@@ -33,7 +33,7 @@ bool dcmtkfile::checkfile(QString path)
         if (fileformat.getDataset()->findAndGetOFString(DCM_PatientName,name).good())
         {
 
-            qDebug("name: %s\n",name);
+//            qDebug("name: %s\n",name);
         }
         else
         {
@@ -43,28 +43,28 @@ bool dcmtkfile::checkfile(QString path)
         if (fileformat.getDataset()->findAndGetOFString(DCM_PatientID,id).good())
         {
 
-            qDebug("id: %s\n",id);
+//            qDebug("id: %s\n",id);
         }
         else
         {
-            cerr<<"get id failed!"<<endl;
+//            cerr<<"get id failed!"<<endl;
             return false;
         }
         if (fileformat.getDataset()->findAndGetOFString(DCM_StudyDate,date).good())
         {
 
-            qDebug("date: %s\n",date);
+//            qDebug("date: %s\n",date);
 
         }
         else
         {
-            cerr<<"get date failed!"<<endl;
+//            cerr<<"get date failed!"<<endl;
             return false;
         }
         if (fileformat.getDataset()->findAndGetOFString(DCM_StudyTime,time).good())
         {
 
-            qDebug("time: %s\n",time);
+//            qDebug("time: %s\n",time);
         }
         else
         {
@@ -73,26 +73,26 @@ bool dcmtkfile::checkfile(QString path)
         }
         if (fileformat.getDataset()->findAndGetUint16(DCM_Rows,height).good())
         {
-            qDebug("height: %d\n",height);
+//            qDebug("height: %d\n",height);
         }
         else
         {
-            cerr<<"get height failed!"<<endl;
+//            cerr<<"get height failed!"<<endl;
             return false;
         }
         if (fileformat.getDataset()->findAndGetUint16(DCM_Columns,width).good())
         {
-            qDebug("width: %d\n",width);
+//            qDebug("width: %d\n",width);
         }
         else
         {
-            cerr<<"get width failed!"<<endl;
+//            cerr<<"get width failed!"<<endl;
             return false;
         }
     }
     else
     {
-        cerr<<"open failed!"<<endl;
+//        cerr<<"open failed!"<<endl;
         return false;
     }
 }

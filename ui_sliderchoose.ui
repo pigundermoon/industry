@@ -25,8 +25,14 @@
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>54</height>
+       <height>70</height>
       </size>
+     </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
      </property>
      <property name="title">
       <string>错切角度</string>
@@ -45,6 +51,12 @@
           <width>31</width>
           <height>16777215</height>
          </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
         </property>
         <property name="text">
          <string>0</string>
@@ -68,6 +80,12 @@
         <property name="enabled">
          <bool>true</bool>
         </property>
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>确认</string>
         </property>
@@ -78,6 +96,12 @@
       </item>
       <item>
        <widget class="QPushButton" name="cancel_button">
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>取消</string>
         </property>
@@ -105,7 +129,6 @@
   </layout>
   <zorder>widget</zorder>
   <zorder>groupBox</zorder>
-  <zorder>degree</zorder>
   <zorder>horizontalSpacer</zorder>
  </widget>
  <resources/>

@@ -42,6 +42,27 @@ extern void divcurve(int istart,int iend,int jstart,int jend, Mat_<unsigned shor
 
 extern void levelAdjustment(Mat_<unsigned short>  input, Mat_<unsigned short> & output, unsigned short inputDark, unsigned short inputGray,unsigned short inputLight,  unsigned short outDark, unsigned short outLight);
 
+extern Mat_<unsigned short> fdenoise(Mat img,float D0);
+
+extern Mat_<unsigned short> RTV(Mat_<unsigned short> img, int degree);
+
+extern Mat_<unsigned short> bidenoise(Mat_<unsigned short> img);
+
+extern Mat_<unsigned short> doPyrSegmentation( Mat_<unsigned short> src);
+
+//归档时错切变换参数，裁剪参数
+extern bool auto_homotransfer;
+extern bool auto_clip;
+extern bool auto_name;
+
+extern float degree;
+extern int clip_left;
+extern int clip_top;
+extern int clip_right;
+extern int clip_bottom;
+extern int clip_cnt;
+extern QString clip_name;
+
 
 
 
@@ -53,6 +74,7 @@ extern void levelAdjustment(Mat_<unsigned short>  input, Mat_<unsigned short> & 
 
 static QString recfilename;
 static vector<QString> filelist;
+static map<QString,long long> recinoutdark;
 static dcmtkfile* dcmFile;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -68,6 +90,14 @@ MainWindow::~MainWindow()
 {
     if (!srcimgshort.empty())
     {
+        if (ifinvert==true)
+        {
+            cur_item.operation.replace(3,1,"1");
+        }
+        else
+        {
+            cur_item.operation.replace(3,1,"0");
+        }
         if (cur_item.exist)
         {
             industry_db.update_imageitem(cur_item);
@@ -81,9 +111,16 @@ MainWindow::~MainWindow()
     rgvector=NULL;
     delete ui;
 }
+
 void MainWindow::initialize()
 {
+    ifbigshow = false;
+    ifresave = false;
+    scanrun = false;
+    scantime = new QTimer(this);
+    connect(scantime,SIGNAL(timeout()),this,SLOT(on_timeout_load()));
 
+    lock_grawidth = false;
     draw_height = 20;
     draw_dhwnum = 32;
     graruler=false;
@@ -119,25 +156,41 @@ void MainWindow::initialize()
     scrollclicked=false;
 
     ui->winshowimg->installEventFilter(this);
-    double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
+    rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
     ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
 
-    QAction *ref = ui->toolBar->actions().at(3);
+//    QAction *ref = ui->toolBar->actions().at(3);
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
     QFont font;
     font.setFamily("Microsoft YaHei");
     font.setPointSize(11);
     font.setWeight(QFont::Normal);
 
+
 //工具栏
 
     {
 
-    //取消
+    QLabel *label;
+
+    //原图
     QToolButton *button = new QToolButton();
+    button->setToolTip(ui->rawimg->toolTip());
+    connect(button, SIGNAL(released()), ui->rawimg, SLOT(trigger()));
+    ButtonActionAdapter *adapter = new ButtonActionAdapter(this, ui->rawimg, button);
+    adapter->local_connect();
+    button->setStyleSheet("QToolButton {margin: 5px; border-image: url(:/img/img/raw_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/raw_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/raw_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/raw_disabled.png);}");
+
+    ui->toolBar->addWidget(button);
+
+    //取消
+    button = new QToolButton();
     button->setToolTip(ui->back->toolTip());
     connect(button, SIGNAL(released()), ui->back, SLOT(trigger()));
-    ButtonActionAdapter *adapter = new ButtonActionAdapter(this, ui->back, button);
+    adapter = new ButtonActionAdapter(this, ui->back, button);
     adapter->local_connect();
     button->setStyleSheet("QToolButton {margin: 5px; border-image: url(:/img/img/cancel_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/cancel_hover.png);}"
@@ -145,65 +198,72 @@ void MainWindow::initialize()
                           "QToolButton:disabled {border-image: url(:/img/img/cancel_disabled.png);}");
 
     ui->toolBar->addWidget(button);
-    //分隔符
-    ui->toolBar->addSeparator();
-    //
-    button = new QToolButton();
-    connect(button, SIGNAL(released()), this, SLOT(on_drawrect_triggered()));
-    button->setStyleSheet("QToolButton {border-image: url(:/img/img/resize_normal.png);}"
-                     "QToolButton:hover:!pressed {border-image: url(:/img/img/resize_hover.png);}"
-                     "QToolButton:hover:pressed {border-image: url(:/img/img/resize_down.png);}"
-                          "QToolButton:disabled {border-image: url(:/img/img/resize_disabled.png);}");
-    adapter = new ButtonActionAdapter(this, ui->drawrect, button);
-    adapter->local_connect();
-    ui->toolBar->addWidget(button);
 
-    //选择窗宽窗位模式
-    QComboBox *box = new QComboBox(ui->toolBar);
-    box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    box->setFixedWidth(140);
-    box->setFont(font);
-    //TODO: 实现不同模式
-    box->addItem("Auto");
-    box->addItem("FullImage");
-    box->setCurrentIndex(-1);
-    ui->toolBar->addWidget(box);
-    //窗宽
-    QLabel *label = new QLabel(QString::fromLocal8Bit("窗宽"), ui->toolBar);
-    label->setStyleSheet("color: rgb(255, 255, 255);"
-                         "margin: 5px;"
-                         "border-bottom-width: 2px;");
-    label->setFont(font);
-    ui->toolBar->addWidget(label);
-    //数值
-    QLineEdit *line = new QLineEdit(ui->toolBar);
-    line->setAlignment(Qt::AlignRight);
-    line->setValidator(new QIntValidator(1, 65535));
-    line->setFrame(false);
-    line->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    line->setFixedWidth(70);
-    line->setFont(font);
-    ui->toolBar->addWidget(line);
-    //窗位
-    label = new QLabel(QString::fromLocal8Bit("窗位"), ui->toolBar);
-    label->setStyleSheet("color: rgb(255, 255, 255);"
-                         "margin: 5px;"
-                         "border-bottom-width: 2px;");
-    label->setFont(font);
-    ui->toolBar->addWidget(label);
-    //数值
-    line = new QLineEdit(ui->toolBar);
-    line->setAlignment(Qt::AlignRight);
-    line->setValidator(new QIntValidator(1, 65535));
-    line->setFrame(false);
-    line->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    line->setFixedWidth(70);
-    line->setFont(font);
-    ui->toolBar->addWidget(line);
+
+    {
+//    //分隔符
+//    ui->toolBar->addSeparator();
+//    //
+//    button = new QToolButton();
+//    connect(button, SIGNAL(released()), this, SLOT(on_drawrect_triggered()));
+//    button->setStyleSheet("QToolButton {border-image: url(:/img/img/resize_normal.png);}"
+//                     "QToolButton:hover:!pressed {border-image: url(:/img/img/resize_hover.png);}"
+//                     "QToolButton:hover:pressed {border-image: url(:/img/img/resize_down.png);}"
+//                          "QToolButton:disabled {border-image: url(:/img/img/resize_disabled.png);}");
+//    adapter = new ButtonActionAdapter(this, ui->drawrect, button);
+//    adapter->local_connect();
+//    ui->toolBar->addWidget(button);
+
+//    //选择窗宽窗位模式
+//    QComboBox *box = new QComboBox(ui->toolBar);
+//    box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+//    box->setFixedWidth(140);
+//    box->setFont(font);
+//    //TODO: 实现不同模式
+//    box->addItem("Auto");
+//    box->addItem("FullImage");
+//    box->setCurrentIndex(-1);
+//    ui->toolBar->addWidget(box);
+//    //窗宽
+//    label = new QLabel(QString::fromLocal8Bit("窗宽"), ui->toolBar);
+//    label->setStyleSheet("color: rgb(255, 255, 255);"
+//                         "margin: 5px;"
+//                         "border-bottom-width: 2px;");
+//    label->setFont(font);
+//    ui->toolBar->addWidget(label);
+//    //数值
+//    QLineEdit *line = new QLineEdit(ui->toolBar);
+//    line->setAlignment(Qt::AlignRight);
+//    line->setValidator(new QIntValidator(1, 65535));
+//    line->setFrame(false);
+//    line->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+//    line->setFixedWidth(70);
+//    line->setFont(font);
+//    ui->toolBar->addWidget(line);
+//    //窗位
+//    label = new QLabel(QString::fromLocal8Bit("窗位"), ui->toolBar);
+//    label->setStyleSheet("color: rgb(255, 255, 255);"
+//                         "margin: 5px;"
+//                         "border-bottom-width: 2px;");
+//    label->setFont(font);
+//    ui->toolBar->addWidget(label);
+//    //数值
+//    line = new QLineEdit(ui->toolBar);
+//    line->setAlignment(Qt::AlignRight);
+//    line->setValidator(new QIntValidator(1, 65535));
+//    line->setFrame(false);
+//    line->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+//    line->setFixedWidth(70);
+//    line->setFont(font);
+//    ui->toolBar->addWidget(line);
+    }
+
+
     //分隔符
     ui->toolBar->addSeparator();
     //
     button = new QToolButton();
+    button->setToolTip(QString::fromLocal8Bit("放大"));
     connect(button, SIGNAL(released()), this, SLOT(on_zoom_in_triggered()));
     adapter = new ButtonActionAdapter(this, ui->zoom_in, button);
     adapter->local_connect();
@@ -214,6 +274,7 @@ void MainWindow::initialize()
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
+    button->setToolTip(QString::fromLocal8Bit("缩小"));
     connect(button, SIGNAL(released()), this, SLOT(on_zoom_out_triggered()));
     adapter = new ButtonActionAdapter(this, ui->zoom_out, button);
     adapter->local_connect();
@@ -224,6 +285,7 @@ void MainWindow::initialize()
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
+    button->setToolTip(QString::fromLocal8Bit("原比例"));
     connect(button, SIGNAL(released()), this, SLOT(on_zoom_triggered()));
     adapter = new ButtonActionAdapter(this, ui->zoom, button);
     adapter->local_connect();
@@ -299,16 +361,30 @@ void MainWindow::initialize()
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
+    button->setToolTip(QString::fromLocal8Bit("旋转"));
     button->setEnabled(false);
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/rotate_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/rotate_hover.png);}"
                      "QToolButton:hover:pressed {border-image: url(:/img/img/rotate_down.png);}"
                           "QToolButton:disabled {border-image: url(:/img/img/rotate_disabled.png);}");
     ui->toolBar->addWidget(button);
+
     //分隔符
     ui->toolBar->addSeparator();
     //
     button = new QToolButton();
+    button->setToolTip(QString::fromLocal8Bit("监视矩形"));
+    connect(button, SIGNAL(released()), this, SLOT(on_drawrect_triggered()));
+    button->setStyleSheet("QToolButton {border-image: url(:/img/img/resize_normal.png);}"
+                     "QToolButton:hover:!pressed {border-image: url(:/img/img/resize_hover.png);}"
+                     "QToolButton:hover:pressed {border-image: url(:/img/img/resize_down.png);}"
+                          "QToolButton:disabled {border-image: url(:/img/img/resize_disabled.png);}");
+    adapter = new ButtonActionAdapter(this, ui->drawrect, button);
+    adapter->local_connect();
+    ui->toolBar->addWidget(button);
+    //
+    button = new QToolButton();
+    button->setToolTip(QString::fromLocal8Bit("附注"));
     button->setEnabled(false);
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/text_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/text_hover.png);}"
@@ -317,6 +393,7 @@ void MainWindow::initialize()
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
+    button->setToolTip(QString::fromLocal8Bit("指向附注"));
     button->setEnabled(false);
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/arrow_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/arrow_hover.png);}"
@@ -325,6 +402,7 @@ void MainWindow::initialize()
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
+    button->setToolTip(QString::fromLocal8Bit("点灰度"));
     button->setEnabled(false);
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/coordinate_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/coordinate_hover.png);}"
@@ -333,6 +411,7 @@ void MainWindow::initialize()
     ui->toolBar->addWidget(button);
     //
     button = new QToolButton();
+    button->setToolTip(QString::fromLocal8Bit("标尺"));
     button->setEnabled(false);
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/length_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/length_hover.png);}"
@@ -343,6 +422,7 @@ void MainWindow::initialize()
     ui->toolBar->addSeparator();
     //
     button = new QToolButton();
+    button->setToolTip(ui->about->toolTip());
     connect(button, SIGNAL(released()), ui->about, SLOT(trigger()));
     button->setStyleSheet("QToolButton {border-image: url(:/img/img/help_normal.png);}"
                      "QToolButton:hover:!pressed {border-image: url(:/img/img/help_hover.png);}"
@@ -351,7 +431,19 @@ void MainWindow::initialize()
 
     }
 
+    //快捷键
+    {
+        ui->winshowimg->addAction(ui->zoom_in);
+        ui->winshowimg->addAction(ui->zoom_out);
+        ui->winshowimg->addAction(ui->rawimg);
+        ui->winshowimg->addAction(ui->back);
+        ui->winshowimg->addAction(ui->zoom);
+        ui->winshowimg->addAction(ui->resave);
+        ui->winshowimg->addAction(ui->scan);
+    }
+
     dataset_model = new QStandardItemModel(ui->fileexplorer);
+
     dataset_model->setHorizontalHeaderLabels(QStringList()<<QStringLiteral("图片名")<<QStringLiteral("创建时间")<<QStringLiteral("路径"));
     ui->fileexplorer->setModel(dataset_model);
     ui->fileexplorer->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -382,11 +474,71 @@ void MainWindow::refresh_dataset()
     for (int i=0;i<pathset.size();i++)
     {
         QString path = pathset.at(i);
-        imageitem tmpitem = industry_db.query_imageitem(path);
-        QStandardItem* itemimage = new QStandardItem(tmpitem.name);
-        dataset_model->appendRow(itemimage);
-        dataset_model->setItem(dataset_model->indexFromItem(itemimage).row(),1,new QStandardItem(tmpitem.date));
-        dataset_model->setItem(dataset_model->indexFromItem(itemimage).row(),2,new QStandardItem(tmpitem.path));
+        imageitem tmpitem = industry_db.query_imageitembypath(path);
+        QStringList itemnames = path.split('/');
+
+        if (!QString(itemnames.at(0)).compare("DICONDEDAT") && itemnames.size() == 5)
+        {
+            QString year = itemnames.at(1)+QString::fromLocal8Bit("年");
+            QString month = itemnames.at(2)+QString::fromLocal8Bit("月");
+            QString day = itemnames.at(3)+QString::fromLocal8Bit("日");
+            QString name = itemnames.at(4);
+            QStandardItem* yearitem;
+            QStandardItem* monthitem;
+            QStandardItem* dayitem;
+            QStandardItem* nameitem;
+            if (dataset_model->findItems(year).size()==0)
+            {
+                yearitem = new QStandardItem(year);
+                dataset_model->appendRow(yearitem);
+            }
+            else
+            {
+                yearitem = dataset_model->findItems(year).at(0);
+            }
+
+            monthitem = NULL;
+            for (int i=0;i<yearitem->rowCount();i++)
+            {
+                if (!(yearitem->child(i)->text().compare(month)))
+                {
+                    monthitem = yearitem->child(i);
+                    break;
+                }
+            }
+            if (monthitem == NULL)
+            {
+                monthitem = new QStandardItem(month);
+                yearitem->appendRow(monthitem);
+            }
+
+            dayitem = NULL;
+            for (int i=0;i<monthitem->rowCount();i++)
+            {
+                if (!(monthitem->child(i)->text().compare(day)))
+                {
+                    dayitem = monthitem->child(i);
+                    break;
+                }
+            }
+            if (dayitem == NULL)
+            {
+                dayitem = new QStandardItem(day);
+                monthitem->appendRow(dayitem);
+            }
+
+            nameitem = new QStandardItem(name);
+            dayitem->appendRow(nameitem);
+            dayitem->setChild(nameitem->index().row(),1,new QStandardItem(tmpitem.date));
+            dayitem->setChild(nameitem->index().row(),2,new QStandardItem(tmpitem.path));
+        }
+        else
+        {
+            QStandardItem* itemimage = new QStandardItem(tmpitem.name);
+            dataset_model->appendRow(itemimage);
+            dataset_model->setItem(dataset_model->indexFromItem(itemimage).row(),1,new QStandardItem(tmpitem.date));
+            dataset_model->setItem(dataset_model->indexFromItem(itemimage).row(),2,new QStandardItem(tmpitem.path));
+        }
     }
 }
 
@@ -399,7 +551,6 @@ void MainWindow::show_image(cv::Mat_<unsigned short> s, int type, bool notcgra)
     if (type==1)
     {
         cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(s.rows, s.cols, CV_16UC1);
-        double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
         ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
         if (notcgra) levelAdjustment(s,timg,indark,ingray,inwhite,outdark,outwhite);
         else s.copyTo(timg);
@@ -468,12 +619,12 @@ void MainWindow::show_image(cv::Mat_<unsigned short> s, int type, bool notcgra)
     }
     drawpaint(showpainter);
 
+    if (ifbigshow)
+    {
+        emit s_bigshowimg(showimg);
+    }
 
-
-
-
-
-
+    ui->winshowimg->clear();
     ui->winshowimg->setPixmap(QPixmap::fromImage(showimg));
     showpainter->end();
 }
@@ -508,13 +659,9 @@ void MainWindow::drawpaint(QPainter *painter)
             float i2 = h_center + ((double)(p2.y())-ui->winshowimg->height()/2)/(((double)curScale)/100) / srcimgshort.rows;
     //        if (i2<0.01||i2>0.99) i2 =0.99;
 
-            int gray = 0;
+            float gray = 0;
             int cnt = 0;
 
-    //        cv::Mat_<unsigned short> timg=cv::Mat_<unsigned short>(srcimgshort.rows, srcimgshort.cols, CV_16UC1);
-    //        double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
-    //        ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
-    //        levelAdjustment(srcimgshort,timg,indark,ingray,inwhite,outdark,outwhite);
             for (int i=i1*srcimgchar.rows;i<=i2*srcimgchar.rows;i++)
             {
                 if (i<0||i>=srcimgchar.rows) continue;
@@ -522,9 +669,10 @@ void MainWindow::drawpaint(QPainter *painter)
                 {
                     if (j<0||j>=srcimgchar.cols) continue;
                     gray = float(gray*cnt)/(cnt+1)+float(srcimgchar(i,j))/(cnt+1);
+                    cnt = cnt+1;
                 }
             }
-            painter->drawText(p1.x(),p1.y()-12,QString::number(gray));
+            painter->drawText(p1.x(),p1.y()-12,QString::number((int)gray));
         }
         else if ((drawchart(cur_chartlist.chartlist.at(i))).type==1)
         {
@@ -596,6 +744,12 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
                 }
                 else if(cur_chartlist.ifonshape(tev->pos()))
                 {
+                    if (cur_chartlist.ifonshape(tev->pos(),1))
+                    {
+                        rstatus = rsta_dragbarrect;
+                        prepos = ev->pos();
+                        return true;
+                    }
                     rstatus = rsta_dragrect;
                     prepos = ev->pos();
                     setCursor(Qt::ClosedHandCursor);
@@ -637,27 +791,55 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
                 QPoint temp = ev->globalPos();
                 int xvalue = temp.x()-cpos.x();
                 int yvalue = temp.y()-cpos.y();
-                cpos=temp;
+                cpos = temp;
+
 
                 int h_inc=inout_interval*xvalue;
-                int tindark = indark-h_inc;
-                int tinwhite = inwhite + h_inc;
-                if (tindark<0) tindark=0;
-                if (tinwhite>65535) tinwhite = 65535;
-                if (tindark>=tinwhite-1) tindark = tinwhite - 2;
-
                 int v_inc=inout_interval*yvalue;
-                tindark = tindark - v_inc;
-                tinwhite = tinwhite - v_inc;
-                if (tindark<0) tindark=0;
-                if (tinwhite>65535) tinwhite = 65535;
-                if (tindark>=tinwhite-1) tindark = tinwhite - 2;
+                int tindark = indark,tinwhite = inwhite;
+//                qDebug("1:%d %d %d %d\n",indark,inwhite,h_inc,v_inc);
 
-
+                if (!lock_grawidth)
+                {
+                    int tdis = indark<65535-inwhite?indark:65535-inwhite;
+                    if (h_inc<tdis && h_inc>0)
+                    {
+                        tindark = indark-h_inc;
+                        tinwhite = inwhite + h_inc;
+                    }
+                    else if (h_inc>tdis && h_inc>0)
+                    {
+                        tindark = indark-tdis;
+                        tinwhite = inwhite + tdis;
+                    }
+                    else if (h_inc<0)
+                    {
+                        int th_inc = h_inc;
+                        if (h_inc<(indark-inwhite)/2)
+                        {
+                           th_inc  = (indark-inwhite)/2+1;
+                        }
+                        tindark = indark-th_inc;
+                        tinwhite = inwhite + th_inc;
+                    }
+                }
 
                 indark = tindark;
                 inwhite = tinwhite;
-                double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
+//                qDebug("2:%d %d %d %d\n",indark,inwhite,h_inc,v_inc);
+                if (v_inc<0)
+                {
+                    if (v_inc<inwhite-65535) v_inc = inwhite-65535;
+                    indark = indark - v_inc;
+                    inwhite = inwhite - v_inc;
+                }
+                else if(v_inc>0)
+                {
+                    if (v_inc>indark) v_inc = indark;
+                    indark = indark - v_inc;
+                    inwhite = inwhite - v_inc;
+                }
+//                qDebug("3:%d %d %d %d\n",indark,inwhite,h_inc,v_inc);
                 ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
                 show_image(srcimgshort,1);
             }
@@ -706,6 +888,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
 
             return true;
         }
+
     }
     else if(target == ui->winshowimg && !srcimgshort.empty() && rstatus == rsta_mark)
     {
@@ -949,7 +1132,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
             rstatus = rsta_translation;
         }
     }
-    else if(target == ui->winshowimg && !srcimgshort.empty() && rstatus == rsta_dragrect)
+    else if(target == ui->winshowimg && !srcimgshort.empty() && rstatus == rsta_dragbarrect)
     {
         if (e->type() == QEvent::MouseMove)
         {
@@ -1019,6 +1202,184 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
             rstatus = rsta_translation;
         }
     }
+    else if(target == ui->winshowimg && !srcimgshort.empty() && rstatus == rsta_dragrect)
+    {
+        if (e->type() == QEvent::MouseMove)
+        {
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            QPoint tmp = ev->pos();
+
+            drawchart newc;
+            newc.type=oldchart.type;
+            int x1,x2,y1,y2;
+            int dx = tmp.x() - prepos.x();
+            int dy = tmp.y() - prepos.y();
+            prepos = tmp;
+
+            x1 = oldchart.p1.x()+dx;
+            x2 = oldchart.p2.x()+dx;
+            y1 = oldchart.p1.y()+dy;
+            y2 = oldchart.p2.y()+dy;
+            newc.p1.setX(x1);newc.p1.setY(y1);newc.p2.setX(x2);newc.p2.setY(y2);
+
+            cur_chartlist.update(oldchart,newc);
+            oldchart = newc;
+
+            prepos=tmp;
+            show_image(srcimgshort,0);
+        }
+        else if(e->type() == QEvent::MouseButtonRelease)
+        {
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            QPoint tmp = ev->pos();
+
+            drawchart newc;
+            newc.type=oldchart.type;
+            int x1,x2,y1,y2;
+            int dx = tmp.x() - prepos.x();
+            int dy = tmp.y() - prepos.y();
+            prepos = tmp;
+
+            x1 = oldchart.p1.x()+dx;
+            x2 = oldchart.p2.x()+dx;
+            y1 = oldchart.p1.y()+dy;
+            y2 = oldchart.p2.y()+dy;
+            newc.p1.setX(x1);newc.p1.setY(y1);newc.p2.setX(x2);newc.p2.setY(y2);
+
+            cur_chartlist.update(oldchart,newc);
+            oldchart = newc;
+
+            prepos=tmp;
+            show_image(srcimgshort,0);
+            rstatus = rsta_translation;
+        }
+    }
+    else if(target == ui->winshowimg && !srcimgshort.empty() && rstatus == rsta_dragcontrast)
+    {
+        if (e->type() == QEvent::MouseButtonPress)
+        {
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            if (ev->button()==Qt::RightButton)
+            {
+                rstatus = rsta_translation;
+                setCursor(Qt::ArrowCursor);
+            }
+            else if (ev->button()==Qt::LeftButton)
+            {
+                drawst=true;
+                stdrawpos = ev->pos();
+                pardraw = 10000;
+            }
+        }
+        else if (e->type() == QEvent::MouseMove && drawst )
+        {
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            QPoint tmp = ev->pos();
+            int x1,x2,y1,y2;
+            if (pardraw == 10000)
+            {
+                pardraw=0;
+
+                drawchart tmpc;
+                tmpc.type=0;
+
+                x1 = stdrawpos.x()<tmp.x()?stdrawpos.x():tmp.x();
+                x2 = stdrawpos.x()>tmp.x()?stdrawpos.x():tmp.x();
+                y1 = stdrawpos.y()<tmp.y()?stdrawpos.y():tmp.y();
+                y2 = stdrawpos.y()>tmp.y()?stdrawpos.y():tmp.y();
+
+                tmpc.p1.setX(x1);tmpc.p1.setY(y1);tmpc.p2.setX(x2);tmpc.p2.setY(y2);
+                cur_chartlist.insert(tmpc);
+            }
+
+            else
+            {
+                drawchart oldc,newc;
+                oldc.type=0;newc.type=0;
+                x1 = stdrawpos.x()<prepos.x()?stdrawpos.x():prepos.x();
+                x2 = stdrawpos.x()>prepos.x()?stdrawpos.x():prepos.x();
+                y1 = stdrawpos.y()<prepos.y()?stdrawpos.y():prepos.y();
+                y2 = stdrawpos.y()>prepos.y()?stdrawpos.y():prepos.y();
+                oldc.p1.setX(x1);oldc.p1.setY(y1);oldc.p2.setX(x2);oldc.p2.setY(y2);
+
+                x1 = stdrawpos.x()<tmp.x()?stdrawpos.x():tmp.x();
+                x2 = stdrawpos.x()>tmp.x()?stdrawpos.x():tmp.x();
+                y1 = stdrawpos.y()<tmp.y()?stdrawpos.y():tmp.y();
+                y2 = stdrawpos.y()>tmp.y()?stdrawpos.y():tmp.y();
+                newc.p1.setX(x1);newc.p1.setY(y1);newc.p2.setX(x2);newc.p2.setY(y2);
+
+                cur_chartlist.update(oldc,newc);
+            }
+
+            prepos=tmp;
+            show_image(srcimgshort,0);
+        }
+        else if(e->type() == QEvent::MouseButtonRelease)
+        {
+            QMouseEvent* ev = static_cast<QMouseEvent*>(e);
+            QPoint tmp = ev->pos();
+            int x1,x2,y1,y2;
+            if (pardraw == 10000)
+            {
+                pardraw=0;
+                drawchart tmpc;
+                tmpc.type=0;
+
+                x1 = stdrawpos.x()<tmp.x()?stdrawpos.x():tmp.x();
+                x2 = stdrawpos.x()>tmp.x()?stdrawpos.x():tmp.x();
+                y1 = stdrawpos.y()<tmp.y()?stdrawpos.y():tmp.y();
+                y2 = stdrawpos.y()>tmp.y()?stdrawpos.y():tmp.y();
+
+                tmpc.p1.setX(x1);tmpc.p1.setY(y1);tmpc.p2.setX(x2);tmpc.p2.setY(y2);
+            }
+
+            else
+            {
+                drawchart oldc,newc;
+                oldc.type=0;newc.type=0;
+                x1 = stdrawpos.x()<prepos.x()?stdrawpos.x():prepos.x();
+                x2 = stdrawpos.x()>prepos.x()?stdrawpos.x():prepos.x();
+                y1 = stdrawpos.y()<prepos.y()?stdrawpos.y():prepos.y();
+                y2 = stdrawpos.y()>prepos.y()?stdrawpos.y():prepos.y();
+                oldc.p1.setX(x1);oldc.p1.setY(y1);oldc.p2.setX(x2);oldc.p2.setY(y2);
+
+                x1 = stdrawpos.x()<tmp.x()?stdrawpos.x():tmp.x();
+                x2 = stdrawpos.x()>tmp.x()?stdrawpos.x():tmp.x();
+                y1 = stdrawpos.y()<tmp.y()?stdrawpos.y():tmp.y();
+                y2 = stdrawpos.y()>tmp.y()?stdrawpos.y():tmp.y();
+                newc.p1.setX(x1);newc.p1.setY(y1);newc.p2.setX(x2);newc.p2.setY(y2);
+                cur_chartlist.update(oldc,newc,1);
+            }
+
+
+            prepos=tmp;
+            show_image(srcimgshort,0);
+            drawst=false;
+            rstatus = rsta_translation;
+            setCursor(Qt::ArrowCursor);
+
+            float j1 = w_center + ((double)(x1)-ui->winshowimg->width()/2)/(((double)curScale)/100) / srcimgshort.cols;
+            float j2 = w_center + ((double)(x2)-ui->winshowimg->width()/2)/(((double)curScale)/100) / srcimgshort.cols;
+            float i1 = h_center + ((double)(y1)-ui->winshowimg->height()/2)/(((double)curScale)/100) / srcimgshort.rows;
+            float i2 = h_center + ((double)(y2)-ui->winshowimg->height()/2)/(((double)curScale)/100) / srcimgshort.rows;
+
+            float gray = 0;
+            int cnt = 0;
+
+            for (int i=i1*srcimgshort.rows;i<=i2*srcimgchar.rows;i++)
+            {
+                if (i<0||i>=srcimgshort.rows) continue;
+                for (int j=j1*srcimgshort.cols;j<=j2*srcimgshort.cols;j++)
+                {
+                    if (j<0||j>=srcimgshort.cols) continue;
+                    gray = float(gray*cnt)/(cnt+1)+float(srcimgshort(i,j))/(cnt+1);
+                    cnt = cnt+1;
+                }
+            }
+            r_contrast_para_self(gray);
+
+        }
+    }
 
     return QMainWindow::eventFilter(target, e);
 }
@@ -1026,6 +1387,12 @@ bool MainWindow::eventFilter(QObject *target, QEvent *e)
 
 void MainWindow::enableaction()
 {
+    ui->compareshow->setEnabled(true);
+    ui->bigshow->setEnabled(true);
+    ui->rawimg->setEnabled(true);
+    ui->autogra->setEnabled(true);
+    ui->resetgra->setEnabled(true);
+    ui->grawidlock->setEnabled(true);
     ui->rulergra->setEnabled(true);
     ui->hist->setEnabled(true);
     ui->zoom->setEnabled(true);
@@ -1042,8 +1409,8 @@ void MainWindow::enableaction()
     ui->info->setEnabled(true);
     ui->turn->setEnabled(true);
     ui->contrast->setEnabled(true);
-    ui->denoise->setEnabled(true);
-    ui->rgradation->setEnabled(true);
+    ui->denoise_2->setEnabled(true);
+//    ui->rgradation->setEnabled(true);
     ui->drawrect->setEnabled(true);
     ui->resetdraw->setEnabled(true);
     pRate->setEnabled(true);
@@ -1052,6 +1419,12 @@ void MainWindow::enableaction()
 }
 void MainWindow::disableaction()
 {
+    ui->compareshow->setEnabled(false);
+    ui->bigshow->setEnabled(false);
+    ui->rawimg->setEnabled(false);
+    ui->autogra->setEnabled(false);
+    ui->resetgra->setEnabled(false);
+    ui->grawidlock->setEnabled(false);
     ui->rulergra->setEnabled(false);
     ui->hist->setEnabled(false);
     ui->zoom->setEnabled(false);
@@ -1068,8 +1441,8 @@ void MainWindow::disableaction()
     ui->info->setEnabled(false);
     ui->turn->setEnabled(false);
     ui->contrast->setEnabled(false);
-    ui->denoise->setEnabled(false);
-    ui->rgradation->setEnabled(false);
+    ui->denoise_2->setEnabled(false);
+//    ui->rgradation->setEnabled(false);
     ui->drawrect->setEnabled(false);
     ui->resetdraw->setEnabled(false);
     pRate->setEnabled(false);
@@ -1084,7 +1457,7 @@ void MainWindow::reset()
     outdark=0;
     outwhite=65535;
     inout_interval=10;
-    double rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
+    rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
     ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
 }
 
@@ -1098,7 +1471,7 @@ void MainWindow::settext(QString arg)
 void MainWindow::on_resave_triggered()
 {
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
-    QString filename1 = QFileDialog::getSaveFileName(this,QString::fromLocal8Bit("另存为"),"","Images (*.tiff);;dicom (*.)");
+    QString filename1 = QFileDialog::getSaveFileName(this,QString::fromLocal8Bit("另存为"),"","Images (*.tiff);;diconde (*.)");
     if (filename1.isEmpty()) return;
     if (!QString(filename1.split('.').back()).compare("tiff"))
     {
@@ -1138,9 +1511,9 @@ void MainWindow::on_resave_triggered()
         fileformat.getDataset()->putAndInsertString(DCM_PatientName,ba.data());
         ba = cur_item.id.toLocal8Bit();
         fileformat.getDataset()->putAndInsertString(DCM_PatientID,ba.data());
-        ba = cur_item.date.toLocal8Bit();
+        ba = QString(cur_item.date.split(' ').first()).toLocal8Bit();
         fileformat.getDataset()->putAndInsertString(DCM_StudyDate,ba.data());
-        ba = cur_item.date.toLocal8Bit();
+        ba = QString(cur_item.date.split(' ').back()).toLocal8Bit();
         fileformat.getDataset()->putAndInsertString(DCM_StudyTime,ba.data());
         fileformat.getDataset()->putAndInsertUint16(DCM_Rows,srcimgshort.rows);
         fileformat.getDataset()->putAndInsertUint16(DCM_Columns,srcimgshort.cols);
@@ -1150,14 +1523,13 @@ void MainWindow::on_resave_triggered()
         {
             for (int j=0;j<srcimgshort.cols;j++)
             {
-                pData[i*srcimgshort.cols+j] = 65536 - srcimgshort(i,j);
+                pData[i*srcimgshort.cols+j] = 65535 - srcimgshort(i,j);
             }
         }
         fileformat.getDataset()->putAndInsertUint16Array(DCM_PixelData,pData,srcimgshort.rows*srcimgshort.cols);
         ba = filename1.toLocal8Bit();
         fileformat.saveFile(ba.data(),EXS_LittleEndianImplicit,EET_UndefinedLength,EGL_withoutGL);
     }
-
 }
 
 void MainWindow::on_imagelist_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
@@ -1172,10 +1544,13 @@ void MainWindow::on_imagelist_currentItemChanged(QListWidgetItem *current, QList
         listchangedflag = false;
         return;
     }
+
+    recinoutdark[filelist[ui->imagelist->row(previous)]]=(long long)(indark+((long long(inwhite))<<16)+(long long(ingray)<<32));
     int num=ui->imagelist->currentRow();
     QString filename=filelist[num];
     openfile(filename,2);
 }
+
 //type=1,列表第一个，打开并显示，type=0，只在列表里显示，type=2，列表切换显示大图
 void MainWindow::openfile(QString filename, int type)
 {
@@ -1192,15 +1567,15 @@ void MainWindow::openfile(QString filename, int type)
 
     if (!srcimgshort.empty() && (type==1 || type==2))
     {
-        if (cur_item.exist)
+        if (ifinvert==true)
         {
-            industry_db.update_imageitem(cur_item);
+            cur_item.operation.replace(3,1,"1");
         }
         else
         {
-            industry_db.insert_imageitem(cur_item);
-            refresh_dataset();
+            cur_item.operation.replace(3,1,"0");
         }
+        industry_db.update_imageitem(cur_item);
     }
 
     if (filename.isEmpty()) return;
@@ -1287,42 +1662,6 @@ void MainWindow::openfile(QString filename, int type)
         srcimgshort.copyTo(raw_srcimgshort);
     }
 
-    if (type == 1 || type == 2)
-    {
-        cur_item = industry_db.query_imageitem(filename);
-        if (!cur_item.exist)
-        {
-            cur_item.path=filename;
-            cur_item.name=filename.split('/').back();
-
-            QDateTime dt;
-            QTime time;
-            QDate date;
-            dt.setTime(time.currentTime());
-            dt.setDate(date.currentDate());
-            cur_item.date=dt.toString("yyyy/MM/dd hh:mm:ss");
-
-            if (!QString::fromLocal8Bit(filename_suffix.toLocal8Bit().data()).compare(("raw")))
-            {
-                cur_item.id = tmpraw.scanid;
-            }
-            else
-            {
-                cur_item.id = "tmp";
-            }
-            cur_item.operation = "";
-            cur_item.chart = "";
-            update_chartlist(cur_item.chart);
-        }
-        else
-        {
-            ifinvert = false;
-            srcimgshort=parse_operationstr(cur_item.operation, srcimgshort);
-            update_chartlist(cur_item.chart);
-        }
-
-    }
-
     srcimgchar=cv::Mat(srcimgshort.rows,srcimgshort.cols,CV_8UC1);
     for (int i=0;i<srcimgshort.rows;i++)
     {
@@ -1334,6 +1673,7 @@ void MainWindow::openfile(QString filename, int type)
 
     if (type==0||type==1)
     {
+        if (!(ui->imagelist->count()==0) && type==1) recinoutdark[filelist[ui->imagelist->currentRow()]]=(long long)(indark+((long long(inwhite))<<16)+(long long(ingray)<<32));
         cv::Mat_<uchar> tcharimg = cv::Mat(raw_srcimgshort.rows, raw_srcimgshort.cols, CV_8UC1);
         for (int i=0;i<raw_srcimgshort.rows;i++)
         {
@@ -1377,9 +1717,60 @@ void MainWindow::openfile(QString filename, int type)
         }
     }
 
+    imageitem tmp_item = industry_db.query_imageitembypath(filename);
+    if (!tmp_item.exist)
+    {
+
+        if ( type != 0 )
+        {
+            ifinvert = false;
+        }
+
+        tmp_item.path=filename;
+        tmp_item.name=filename.split('/').back();
+
+        QDateTime dt;
+        QTime time;
+        QDate date;
+        dt.setTime(time.currentTime());
+        dt.setDate(date.currentDate());
+        tmp_item.date=dt.toString("yyyy/MM/dd hh:mm:ss");
+
+        if (!QString::fromLocal8Bit(filename_suffix.toLocal8Bit().data()).compare(("raw")))
+        {
+            tmp_item.id = tmpraw.scanid;
+        }
+        else
+        {
+            tmp_item.id = "tmp";
+        }
+        tmp_item.operation = "$0:0" ;
+        tmp_item.chart = "";
+//        update_chartlist(tmp_item.chart);
+    }
+    else
+    {
+        if (type != 0 )
+        {
+            ifinvert = false;
+            srcimgshort=parse_operationstr(tmp_item.operation, srcimgshort);
+            update_chartlist(tmp_item.chart);
+        }
+    }
+    if (tmp_item.exist)
+    {
+        industry_db.update_imageitem(tmp_item);
+    }
+    else
+    {
+        industry_db.insert_imageitem(tmp_item);
+        refresh_dataset();
+    }
+
 
     if (type==2||type==1)
     {
+        cur_item = tmp_item;
 //        emit s_imageshort(srcimgshort);
         showimg=mat2qimage(srcimgchar);
 
@@ -1392,10 +1783,10 @@ void MainWindow::openfile(QString filename, int type)
         double wrate=double(winw)/ow;
         double hrate=double(winh)/oh;
 
-        double rate=min(wrate,hrate);
-        settext(QString::number((int)(rate*100)));
+        double whrate=min(wrate,hrate);
+        settext(QString::number((int)(whrate*100)));
 
-        if(rate>1)
+        if(whrate>1)
         {
             sliderpos=100;
             slidermin=50;
@@ -1403,9 +1794,9 @@ void MainWindow::openfile(QString filename, int type)
         }
         else
         {
-            sliderpos=100*rate;
+            sliderpos=100*whrate;
             slidermin=0.5*sliderpos;
-            slidermax=200;
+            slidermax=400;
         }
         if (nullflag)
         {
@@ -1420,6 +1811,19 @@ void MainWindow::openfile(QString filename, int type)
 
         pRate->setValidator(new QIntValidator(slidermin, slidermax));
 
+        if (recinoutdark.count(filename))
+        {
+            indark = (ushort)(recinoutdark[filename] & ((1<<16)-1));
+            inwhite = (ushort)((recinoutdark[filename] >>16) & ((1<<16)-1));
+            ingray = (ushort)((recinoutdark[filename] >>32) & ((1<<16)-1));
+            rate=log(0.5) / log(((double)(ingray) - (double)indark) / ((double)inwhite - (double)indark));
+        }
+        else
+        {
+           rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
+           auto_reset_graparas(srcimgshort,indark,inwhite);
+           recinoutdark[filename] = (long long)(indark+((long long(inwhite))<<16)+(long long(ingray)<<32));
+        }
         show_image(srcimgshort,1);
 
         QGraphicsDropShadowEffect *e1=new QGraphicsDropShadowEffect;
@@ -1484,6 +1888,7 @@ void MainWindow::on_resetdraw_triggered()
     tmpchart.p1=QPoint(0,ui->winshowimg->height()-draw_height);
     tmpchart.p2=QPoint(ui->winshowimg->width(),ui->winshowimg->height());
     cur_chartlist.insert(tmpchart);
+    draw_dhw = ui->winshowimg->width()/(draw_dhwnum+1);
 
     show_image(srcimgshort,0);
 }
@@ -1563,6 +1968,15 @@ void MainWindow::on_hist_triggered()
     w1->exec();
 }
 
+//自动色阶
+void MainWindow::on_autogra_triggered()
+{
+    auto_reset_graparas(srcimgshort,indark,inwhite);
+    recinoutdark[cur_item.path]=(long long)(indark+((long long(inwhite))<<16)+(long long(ingray)<<32));
+    rate=log(0.5) / log(((double)(32767) - (double)0) / ((double)65535 - (double)0));
+    show_image(srcimgshort,1);
+}
+
 //触发直方图均衡化hdr
 void MainWindow::on_hist_hdr_triggered()
 {
@@ -1571,7 +1985,7 @@ void MainWindow::on_hist_hdr_triggered()
     QObject::connect(this,SIGNAL(s_imageshort(cv::Mat_<unsigned short>)),w2,SLOT(r_imageshort(cv::Mat_<unsigned short>)));
     QObject::connect(w2,SIGNAL(s_imagechar(cv::Mat_<unsigned char>)),this,SLOT(r_imagechar(cv::Mat_<unsigned char>)));
     QObject::connect(w2,SIGNAL(s_cancel()),this,SLOT(r_cancel()));
-//    QObject::connect(w2,SIGNAL(s_ok(cv::Mat_<unsigned short>)),this,SLOT(r_ok(cv::Mat_<unsigned short>)));
+    QObject::connect(w2,SIGNAL(s_ok(cv::Mat_<unsigned short>,QString)),this,SLOT(r_ok(cv::Mat_<unsigned short>,QString)));
 
     emit s_imageshort(srcimgshort);
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
@@ -1582,6 +1996,7 @@ void MainWindow::on_hist_hdr_triggered()
     w2->setFixedHeight(100);
     w2->exec();
 }
+
 //局部调整hdr
 void MainWindow::on_localadaptive_hdr_triggered()
 {
@@ -1590,7 +2005,7 @@ void MainWindow::on_localadaptive_hdr_triggered()
     QObject::connect(this,SIGNAL(s_imageshort(cv::Mat_<unsigned short>)),w3,SLOT(r_imageshort(cv::Mat_<unsigned short>)));
     QObject::connect(w3,SIGNAL(s_imagechar(cv::Mat_<unsigned char>)),this,SLOT(r_imagechar(cv::Mat_<unsigned char>)));
     QObject::connect(w3,SIGNAL(s_cancel()),this,SLOT(r_cancel()));
-//    QObject::connect(w3,SIGNAL(s_ok(cv::Mat_<unsigned short>)),this,SLOT(r_ok(cv::Mat_<unsigned short>)));
+    QObject::connect(w3,SIGNAL(s_ok(cv::Mat_<unsigned short>,QString)),this,SLOT(r_ok(cv::Mat_<unsigned short>,QString)));
 
 
 
@@ -1598,13 +2013,86 @@ void MainWindow::on_localadaptive_hdr_triggered()
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
     w3->setWindowTitle(QString::fromLocal8Bit("局部适应HDR调整"));
     w3->setWindowFlags(Qt::WindowCloseButtonHint);
-    w3->setGeometry(x()+100,y()+100,316,152);
-    w3->setFixedWidth(316);
-    w3->setFixedHeight(152);
+    w3->setGeometry(x()+100,y()+100,299,138);
+    w3->setFixedWidth(299);
+    w3->setFixedHeight(138);
     w3->exec();
 }
+
+//同步显示
+void MainWindow::on_bigshow_triggered()
+{
+    if (srcimgshort.empty()) return;
+    ifbigshow = true;
+
+    w_bigshow = new showimgwindow();
+    connect(this,SIGNAL(s_bigshowimg(QImage)),w_bigshow,SLOT(r_img(QImage)));
+    connect(w_bigshow,SIGNAL(s_bigshow_close()),this,SLOT(r_bigshow_close()));
+
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+    w_bigshow->setWindowTitle(QString::fromLocal8Bit("同步显示"));
+    QPoint tpoint = this->mapToGlobal(QPoint(this->width()/2-ui->showimg->width()/2,this->height()/2-ui->showimg->height()/2));
+    w_bigshow->setGeometry(tpoint.x(),tpoint.y(),ui->showimg->width(),ui->showimg->height());
+    w_bigshow->setWindowFlags(Qt::WindowCloseButtonHint|Qt::WindowMaximizeButtonHint);
+
+    w_bigshow->show();
+
+    show_image(srcimgshort,0);
+}
+void MainWindow::r_bigshow_close()
+{
+    ifbigshow = false;
+}
+
+//对比显示
+void MainWindow::on_compareshow_triggered()
+{
+    if (srcimgshort.empty()) return;
+
+    w_compareshow = new ui_compare_show();
+
+    connect(this,SIGNAL(s_2_imgshort(cv::Mat_<unsigned short>,cv::Mat_<unsigned short>,double)),w_compareshow,SLOT(r_2_imgshort(cv::Mat_<unsigned short>,cv::Mat_<unsigned short>,double)));
+
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+    w_compareshow->setWindowTitle(QString::fromLocal8Bit("对比显示"));
+
+    QDesktopWidget* desk;
+    int winheight = desk->availableGeometry().height()*0.8;
+    int winwidth = desk->availableGeometry().width()*0.8;
+    int swinheight, swinwidth;
+    if (double(winheight)/winwidth < double(srcimgshort.rows*2)/srcimgshort.cols)
+    {
+        swinheight = winheight;
+        swinwidth = winheight*srcimgshort.cols/(srcimgshort.rows*2);
+    }
+    else
+    {
+        swinwidth = winwidth;
+        swinheight = winwidth*srcimgshort.rows*2/srcimgshort.cols;
+    }
+    QPoint tpoint = this->mapToGlobal(QPoint(this->width()/2-swinwidth/2,this->height()/2 - swinheight/2));
+    w_compareshow->setGeometry(tpoint.x(),tpoint.y(),swinwidth,swinheight);
+    w_compareshow->setWindowFlags(Qt::WindowCloseButtonHint|Qt::WindowMaximizeButtonHint);
+
+    cv::Mat_<unsigned short> tmp = Mat(srcimgshort.rows,srcimgshort.cols,CV_16UC1);
+    ingray=indark+(int)((double)(inwhite-indark)*pow(double(2.718),log(0.5)/rate));
+    levelAdjustment(srcimgshort,tmp,indark,ingray,inwhite,outdark,outwhite);
+    if (ifinvert) tmp = 65535 - tmp;
+    emit s_2_imgshort(raw_srcimgshort,tmp,double(swinwidth)/srcimgshort.cols);
+
+    w_compareshow->show();
+
+}
+
+
 //对比度
 void MainWindow::on_contrast_triggered()
+{
+    rstatus = rsta_dragcontrast;
+    setCursor(Qt::CrossCursor);
+}
+
+void MainWindow::r_contrast_para_self(int pos)
 {
     if(!ui->contrast->isEnabled())
         return;
@@ -1614,8 +2102,10 @@ void MainWindow::on_contrast_triggered()
     QObject::connect(w_contrast,SIGNAL(s_cancel()),this,SLOT(r_cancel()));
     QObject::connect(w_contrast,SIGNAL(s_ok(cv::Mat_<unsigned short>,QString)),this,SLOT(r_ok(cv::Mat_<unsigned short>,QString)));
     QObject::connect(w_contrast,SIGNAL(s_imageshort(cv::Mat_<unsigned short>)),this,SLOT(r_imageshort(cv::Mat_<unsigned short>)));
+    QObject::connect(this,SIGNAL(s_contrast_para(int)),w_contrast,SLOT(r_contrast_para(int)));
 
     emit s_imageshort(srcimgshort);
+    emit s_contrast_para(pos);
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
     w_contrast->setWindowTitle(QString::fromLocal8Bit("对比度调整"));
     w_contrast->setWindowFlags(Qt::WindowCloseButtonHint);
@@ -1624,62 +2114,7 @@ void MainWindow::on_contrast_triggered()
     w_contrast->setFixedHeight(105);
     w_contrast->exec();
 }
-//去噪
-void MainWindow::on_denoise_triggered()
-{
-    w_process = new processing();
-    QObject::connect(this,SIGNAL(s_number(int)),w_process,SLOT(r_number(int)));
-    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
-    w_process->setWindowTitle(QString::fromLocal8Bit("去噪处理中"));
-    w_process->setWindowFlags(windowFlags() &~ Qt::WindowCloseButtonHint);
-    w_process->setGeometry(x()+100,y()+100,276,68);
-    w_process->setFixedWidth(276);
-    w_process->setFixedHeight(68);
-    w_process->show();
 
-    QTime time;
-    time.start();
-    while(time.elapsed()<500)
-    QCoreApplication::processEvents();
-
-    emit(s_number(0));
-    ui->back->setEnabled(true);
-    if ((int)backup.size()<maxback)
-    {
-        backup.push_back(srcimgshort-0);
-    }
-    else
-    {
-        backup.pop_front();
-        backup.push_back(srcimgshort-0);
-    }
-
-    cv::Mat temp=cv::Mat(srcimgshort.size(),CV_32F);
-    for (int i=0;i<srcimgshort.rows;i++)
-    {
-        for (int j=0;j<srcimgshort.cols;j++)
-        {
-            float t=float(srcimgshort(i,j));
-            temp.at<float>(i,j)=float(srcimgshort(i,j));
-            t=temp.at<float>(i,j);
-        }
-    }
-    emit(s_number(10));
-    cv::Mat temp1;
-
-    cv::bilateralFilter(temp, temp1, 10, 50.0f, 50.0f);
-    emit(s_number(80));
-    double d1,d2;
-    cv::Mat div=temp-temp1;
-    cv::minMaxIdx(div,&d1,&d2);
-//    float t=temp1.at<float>(0,0);
-    temp1.convertTo(srcimgshort,CV_16UC1);
-    show_image(srcimgshort,1);
-    emit(s_number(100));
-
-
-
-}
 //图片信息
 void MainWindow::on_info_triggered()
 {
@@ -1718,7 +2153,7 @@ void MainWindow::on_about_triggered()
     w5->setWindowTitle(QString::fromLocal8Bit("关于本软件"));
     w5->setWindowFlags(Qt::WindowCloseButtonHint);
     w5->setGeometry(x()+100,y()+100,310,130);
-    w5->setFixedWidth(310);
+    w5->setFixedWidth(350);
     w5->setFixedHeight(130);
     w5->exec();
 }
@@ -1732,8 +2167,6 @@ void MainWindow::on_invert_triggered()
     ifinvert=!ifinvert;
 
     show_image(srcimgshort,1);
-
-    cur_item.operation+="$0:";
 
 }
 //触发水平翻转按钮
@@ -1826,9 +2259,19 @@ void MainWindow::r_ok_hist(unsigned short tindark, unsigned short tingray, unsig
     inwhite=tinwhite;
     outdark=toutdark;
     outwhite=toutwhite;
+    rate=log(0.5) / log(((double)(ingray) - (double)indark) / ((double)inwhite - (double)indark));
 
     show_image(srcimgshort,1);
 
+}
+
+void MainWindow::on_resetgra_triggered()
+{
+    indark = 0;
+    inwhite = 65535;
+    outdark =0;
+    outwhite = 65535;
+    show_image(srcimgshort,1);
 }
 
 //处理确认，变更
@@ -1840,14 +2283,45 @@ void MainWindow::r_ok(cv::Mat_<unsigned short> a,QString opt)
     cur_item.operation+=opt;
 }
 
+//窗宽锁定
+void MainWindow::on_grawidlock_triggered()
+{
+    lock_grawidth = !lock_grawidth;
+
+    if (lock_grawidth == true)
+    {
+        ui->grawidlock->setText(QString::fromLocal8Bit("窗宽解锁"));
+    }
+    else
+    {
+        ui->grawidlock->setText(QString::fromLocal8Bit("窗宽锁定"));
+    }
+}
+
 //回退申请
 void MainWindow::on_back_triggered()
 {
     if (srcimgshort.empty()) return;
     else
     {
-        cur_item.operation="";
+        cur_item.operation="$0:0";
+        ifinvert = false;
         raw_srcimgshort.copyTo(srcimgshort);
+        show_image(srcimgshort,1);
+    }
+}
+
+//原图
+
+void MainWindow::on_rawimg_triggered()
+{
+    if (srcimgshort.empty()) return;
+    else
+    {
+        cur_item.operation="$0:0";
+        ifinvert = false;
+        raw_srcimgshort.copyTo(srcimgshort);
+        reset();
         show_image(srcimgshort,1);
     }
 }
@@ -1860,15 +2334,13 @@ void MainWindow::on_exit_triggered()
 void MainWindow::on_zoom_out_triggered()
 {
     if (srcimgshort.empty()) return;
-    if (curScale-1>=minScale && curScale-1<=maxScale)
-        setCurScale(curScale - 1);
+        setCurScale(curScale - 15);
 }
 
 void MainWindow::on_zoom_in_triggered()
 {
     if (srcimgshort.empty()) return;
-    if (curScale + 1 >= minScale && curScale + 1 <= maxScale)
-        setCurScale(curScale + 1);
+        setCurScale(curScale + 15);
 }
 
 void MainWindow::on_zoom_triggered()
@@ -1934,6 +2406,7 @@ void MainWindow::r_ok_degree(float degree)
     if (abs(degree)>0.01) cur_item.operation+="$5:" + QString::number(degree);
 }
 
+//浮雕化
 void MainWindow::on_emboss_triggered()
 {
 
@@ -1945,15 +2418,15 @@ void MainWindow::on_emboss_triggered()
 
     Mat_<unsigned short> timg;
     srcimgshort.copyTo(timg);
-    emboss(timg,3,100);
+    emboss(timg,1,100);
     show_image(timg,1);
 
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
     w7->setWindowTitle(QString::fromLocal8Bit("浮雕化"));
     w7->setWindowFlags(Qt::WindowCloseButtonHint);
-    w7->setGeometry(x()+100,y()+100,404,150);
-    w7->setFixedWidth(404);
-    w7->setFixedHeight(150);
+    w7->setGeometry(x()+100,y()+100,402,288);
+    w7->setFixedWidth(402);
+    w7->setFixedHeight(288);
     w7->exec();
 }
 
@@ -1974,61 +2447,444 @@ void MainWindow::r_ok_emboss_value(int dis, int contrast)
 
 void MainWindow::on_scan_triggered()
 {
+    scanflag.lock();
+    if (scanrun)
+    {
+        scanflag.unlock();
+        return;
+    }
+    else
+    {
+        scanrun=true;
+        scanflag.unlock();
+    }
+
+
+    if (scantime->isActive()) scantime->stop();
+    scantime->start(10000);
+
+    connect(this,SIGNAL(ctimer()),this,SLOT(r_ctimer()));
+    QtConcurrent::run(this,&MainWindow::execscan);
+}
+
+void MainWindow::r_ctimer()
+{
+    if (ifresave) scantime->stop();
+    else
+    {
+        scantime->stop();
+        scantime->setSingleShot(true);
+        scantime->start(0);
+    }
+}
+
+void MainWindow::execscan()
+{
+    QFile file("path.txt");
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug()<<"Can't open the file!"<<endl;
+    }
+    QByteArray line = file.readLine();
+    QString execname = QString::fromLocal8Bit(line);
+    QProcess::execute(execname);
+    emit ctimer();
+    scanflag.lock();
+    scanrun=false;
+    scanflag.unlock();
+}
+
+
+void MainWindow::on_loaddata_triggered()
+{
+    on_timeout_load();
+}
+
+void MainWindow::on_loaddata_reset_triggered()
+{
+    auto_homotransfer = false;
+    auto_clip = false;
+    auto_name = false;
+
+    degree = 0.0;
+    clip_left = 0;
+    clip_top = 0;
+    clip_right = 0;
+    clip_bottom = 0;
+    clip_cnt = 0;
+    clip_name = "";
+}
+
+//生成实时路径
+QString MainWindow::genpath()
+{
+    QDate date;
+    QString year = QString::number(date.currentDate().year());
+    QString month = QString::number(date.currentDate().month());
+    QString day = QString::number(date.currentDate().day());
+
+    QString path = "DICONDEDAT/" + QString::fromLocal8Bit(year.toLocal8Bit()) + "/" +
+            QString::fromLocal8Bit(month.toLocal8Bit()) + "/" + QString::fromLocal8Bit(day.toLocal8Bit()) + "/";
+    QDir* dir = new QDir;
+    if (!dir->exists(path)) dir->mkpath(path);
+    return path;
+}
+
+void MainWindow::on_timeout_load()
+{
+    ifresave = true;
     QFile file("path.txt");
     if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         qDebug()<<"Can't open the file!"<<endl;
     }
 
-        QByteArray line = file.readLine();
-        QString execname = QString::fromLocal8Bit(line);
-        QProcess::execute(execname);
-
-        line = file.readLine();
-        QString filepath = QString::fromLocal8Bit(line);
-        QDir dir;
-        dir.setPath(filepath);
-        dir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
-        dir.setSorting(QDir::Size | QDir::Reversed);
-        QFileInfoList list = dir.entryInfoList();
-        for (int i = 0; i < list.size(); ++i)
+    QByteArray line = file.readLine();
+    line = file.readLine();
+    QString filepath = QString::fromLocal8Bit(line);
+    QDir dir;
+    dir.setPath(filepath);
+    dir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
+    dir.setSorting(QDir::Name | QDir::Time);
+    QFileInfoList list = dir.entryInfoList();
+    for (int i = 0; i < list.size(); ++i)
+    {
+        QFileInfo fileInfo = list.at(i);
+        if (!fileInfo.suffix().compare("raw",Qt::CaseInsensitive))
         {
-            QFileInfo fileInfo = list.at(i);
-            if (!fileInfo.suffix().compare("raw",Qt::CaseInsensitive))
+            imageitem tmp;
+            tmp = industry_db.query_imageitem(QString(fileInfo.fileName().split('.').first()));
+            if (tmp.exist) continue;
+            else
             {
-                imageitem tmp;
-                tmp = industry_db.query_imageitem("data\\" + QString(fileInfo.fileName().split('.').first()));
-                if (tmp.exist) continue;
-                else
-                {
-                    tmp.path = "data\\" + QString(fileInfo.fileName().split('.').first());
-                    tmp.name = fileInfo.fileName().split('.').first();
-                    tmp.id = tmp.name.split('_').first();
 
-                    QDateTime dt;
-                    QTime time;
-                    QDate date;
-                    dt.setTime(time.currentTime());
-                    dt.setDate(date.currentDate());
-                    tmp.date=dt.toString("yyyy/MM/dd hh:mm:ss");
+//                tmp.path = genpath() + QString(fileInfo.fileName().split('.').first());
+                tmp.path = genpath();
+                tmp.name = fileInfo.fileName().split('.').first();
+                tmp.id = tmp.name.split('_').first();
 
-                    rawfile tmpraw;
-                    tmpraw.resavedcm(fileInfo.filePath(),dt,tmp.path);
+                QString wandh = tmp.name.split('_').at(1);
+                int width = QString(wandh.split('x').first()).toInt();
+                int height = QString(wandh.split('x').back()).toInt();
 
-                    tmp.operation = "";
-                    tmp.chart = "";
+                if (!(width>0&&height>0)) continue;
 
-                    industry_db.insert_imageitem(tmp);
-                    refresh_dataset();
-                }
+                QDateTime dt;
+                QTime time;
+                QDate date;
+                dt.setTime(time.currentTime());
+                dt.setDate(date.currentDate());
+                tmp.date=dt.toString("yyyy/MM/dd hh:mm:ss");
+
+                tmp.operation = "$0:0" ;
+                tmp.chart = "";
+                homow=new homo_clip(0,fileInfo.filePath(),dt,tmp,industry_db);
+                QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+                homow->setWindowTitle(QString::fromLocal8Bit("错切变换与裁切"));
+                homow->setWindowFlags(Qt::WindowCloseButtonHint);
+                homow->setGeometry(100,100,900,400);
+                homow->setFixedWidth(900);
+                homow->setFixedHeight(400);
+                if (homow->initialize()) homow->exec();
+
+                if (srcimgshort.empty()) openfile(homow->dataitem.path,1);
+                else openfile(homow->dataitem.path,0);
             }
-
         }
+
+    }
+    refresh_dataset();
+    ifresave = false;
+}
+
+//拼接图片
+void MainWindow::on_cascade_triggered()
+{
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+    QStringList filelist = QFileDialog::getOpenFileNames(this,QString::fromLocal8Bit("打开"),"","Images (*)");
+    vector<Mat> imgs;
+    for (QStringList::iterator it = filelist.begin();it != filelist.end();it++)
+    {
+        QString path = *it;
+        if (!dcmFile->checkfile(path)) continue;
+        Mat_<unsigned short> t1 = dcmFile->loadfile(path);
+        Mat t2 = cvCreateMat(t1.rows,t1.cols,CV_8UC3);
+        for (int i=0;i<t1.rows;i++)
+        {
+            for (int j=0;j<t1.cols;j++)
+            {
+                t2.at<Vec3b>(i,j)[0] = double(t1(i,j))/65535*255;
+                t2.at<Vec3b>(i,j)[1] = double(t1(i,j))/65535*255;
+                t2.at<Vec3b>(i,j)[2] = double(t1(i,j))/65535*255;
+            }
+        }
+
+        imgs.push_back(t2);
+    }
+
+
+
+    if (imgs.size()<=1) return;
+
+    Mat pano;
+    Stitcher stitcher = Stitcher::createDefault();
+    PlaneWarper* cw = new PlaneWarper();
+    stitcher.setWarper(cw);
+    detail::SurfFeaturesFinder *featureFinder = new detail::SurfFeaturesFinder();
+    stitcher.setFeaturesFinder(featureFinder);
+
+    Stitcher::Status status = stitcher.estimateTransform(imgs);
+       if (status != Stitcher::OK)
+       {
+           QMessageBox::warning(NULL, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("无法拼接！"),  QString::fromLocal8Bit("确认"));
+           cout << "can't stitch images1"<< endl;
+           return;
+       }
+
+    status = stitcher.composePanorama(pano);
+    if (status != Stitcher::OK)
+    {
+        QMessageBox::warning(NULL, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("无法拼接！"),  QString::fromLocal8Bit("确认"));
+        cout << "can't stitch images2"<< endl;
+        return;
+    }
+
+    Mat_<unsigned short> resaveimg = Mat_<unsigned short>(pano.rows,pano.cols,CV_16UC1);
+    for (int i=0;i<pano.rows;i++)
+    {
+        for (int j=0;j<pano.cols;j++)
+        {
+            resaveimg(i,j) = pano.at<Vec3b>(i,j)[0]*255;
+        }
+    }
+
+    QDateTime dt;
+    QTime time;
+    QDate date;
+    dt.setTime(time.currentTime());
+    dt.setDate(date.currentDate());
+
+    QString resavename = QString("pano-")+dt.toString("yyyyMMdd-hh-mm-ss");
+    QString resavepath = genpath()+resavename;
+
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+    QByteArray ba;
+    DcmFileFormat fileformat;
+
+    ba = resavename.toLocal8Bit();
+    fileformat.getDataset()->putAndInsertString(DCM_PatientName,ba.data());
+    ba = resavename.toLocal8Bit();
+    fileformat.getDataset()->putAndInsertString(DCM_PatientID,ba.data());
+    ba = dt.toString("yyyy/MM/dd").toLocal8Bit();
+    fileformat.getDataset()->putAndInsertString(DCM_StudyDate,ba.data());
+    ba = dt.toString("hh:mm:ss").toLocal8Bit();
+    fileformat.getDataset()->putAndInsertString(DCM_StudyTime,ba.data());
+    fileformat.getDataset()->putAndInsertUint16(DCM_Rows,resaveimg.rows);
+    fileformat.getDataset()->putAndInsertUint16(DCM_Columns,resaveimg.cols);
+
+    Uint16* pData = new Uint16[resaveimg.rows*resaveimg.cols];
+    for (int i=0;i<resaveimg.rows;i++)
+    {
+        for (int j=0;j<resaveimg.cols;j++)
+        {
+            pData[i*resaveimg.cols+j] = 65535 - resaveimg(i,j);
+        }
+    }
+    fileformat.getDataset()->putAndInsertUint16Array(DCM_PixelData,pData,resaveimg.rows*resaveimg.cols);
+    ba = resavepath.toLocal8Bit();
+    fileformat.saveFile(ba.data(),EXS_LittleEndianImplicit,EET_UndefinedLength,EGL_withoutGL);
+
+    openfile(resavepath,1);
 
 }
 
+//去噪
+void MainWindow::denoise_methods(int type, int degree)
+{
+
+    if (type==0)
+    {
+        srcimgshort = bidenoise(srcimgshort);
+//        show_image(srcimgshort,1);
+    }
+    else if (type==1)
+    {
+        if (degree == 0)
+        {
+            srcimgshort = fdenoise(srcimgshort,4*200*400);
+//            show_image(srcimgshort,1);
+        }
+        else if (degree == 1)
+        {
+            srcimgshort = fdenoise(srcimgshort,2*200*400);
+//            show_image(srcimgshort,1);
+        }
+        else if (degree == 2)
+        {
+            srcimgshort = fdenoise(srcimgshort,1*200*400);
+//            show_image(srcimgshort,1);
+        }
+    }
+    else if (type == 2)
+    {
+        if (degree == 0)
+        {
+            srcimgshort = RTV(srcimgshort, 0);
+//            show_image(srcimgshort,1);
+        }
+        else if (degree == 1)
+        {
+            srcimgshort = RTV(srcimgshort, 1);
+//            show_image(srcimgshort,1);
+        }
+        else if (degree == 2)
+        {
+            srcimgshort = RTV(srcimgshort, 2);
+//            show_image(srcimgshort,1);
+        }
+    }
+    emit s_denoise_close();
+}
+
+void MainWindow::r_denoise_close_ok()
+{
+    show_image(srcimgshort,1);
+}
+
+void MainWindow::on_basicdenoise_triggered()
+{
+    ui->back->setEnabled(true);
+
+    w_process=new processing();
+    w_process->setWindowFlags(Qt::FramelessWindowHint);
+    QPoint tpoint = ui->showimg->mapToGlobal(QPoint(ui->showimg->width()/2-65,ui->showimg->height()/2-65));
+    w_process->setGeometry(tpoint.x(),tpoint.y(),130,130);
+    w_process->setFixedWidth(130);
+    w_process->setFixedHeight(130);
+
+    connect(this,SIGNAL(s_denoise_close()),w_process,SLOT(r_denoise_close()));
+    connect(w_process,SIGNAL(s_denoise_close_ok()),this,SLOT(r_denoise_close_ok()));
+
+    QtConcurrent::run(this,&MainWindow::denoise_methods,0,0);
+
+    w_process->exec();
+}
+
+void MainWindow::on_cycle_strong_triggered()
+{
+    ui->back->setEnabled(true);
+
+    w_process=new processing();
+    w_process->setWindowFlags(Qt::FramelessWindowHint);
+    QPoint tpoint = ui->showimg->mapToGlobal(QPoint(ui->showimg->width()/2-65,ui->showimg->height()/2-65));
+    w_process->setGeometry(tpoint.x(),tpoint.y(),130,130);
+    w_process->setFixedWidth(130);
+    w_process->setFixedHeight(130);
+
+    connect(this,SIGNAL(s_denoise_close()),w_process,SLOT(r_denoise_close()));
+    connect(w_process,SIGNAL(s_denoise_close_ok()),this,SLOT(r_denoise_close_ok()));
+
+    QtConcurrent::run(this,&MainWindow::denoise_methods,1,2);
+
+    w_process->exec();
+}
+
+void MainWindow::on_cycle_mid_triggered()
+{
+    ui->back->setEnabled(true);
+
+    w_process=new processing();
+    w_process->setWindowFlags(Qt::FramelessWindowHint);
+    QPoint tpoint = ui->showimg->mapToGlobal(QPoint(ui->showimg->width()/2-65,ui->showimg->height()/2-65));
+    w_process->setGeometry(tpoint.x(),tpoint.y(),130,130);
+    w_process->setFixedWidth(130);
+    w_process->setFixedHeight(130);
+
+    connect(this,SIGNAL(s_denoise_close()),w_process,SLOT(r_denoise_close()));
+    connect(w_process,SIGNAL(s_denoise_close_ok()),this,SLOT(r_denoise_close_ok()));
+
+    QtConcurrent::run(this,&MainWindow::denoise_methods,1,1);
+
+    w_process->exec();
+}
+
+void MainWindow::on_cycle_weak_triggered()
+{
+    ui->back->setEnabled(true);
+
+    w_process=new processing();
+    w_process->setWindowFlags(Qt::FramelessWindowHint);
+    QPoint tpoint = ui->showimg->mapToGlobal(QPoint(ui->showimg->width()/2-65,ui->showimg->height()/2-65));
+    w_process->setGeometry(tpoint.x(),tpoint.y(),130,130);
+    w_process->setFixedWidth(130);
+    w_process->setFixedHeight(130);
+
+    connect(this,SIGNAL(s_denoise_close()),w_process,SLOT(r_denoise_close()));
+    connect(w_process,SIGNAL(s_denoise_close_ok()),this,SLOT(r_denoise_close_ok()));
+
+    QtConcurrent::run(this,&MainWindow::denoise_methods,1,0);
+
+    w_process->exec();
+}
+
+void MainWindow::on_RTV_strong_triggered()
+{
+    ui->back->setEnabled(true);
+
+    w_process=new processing();
+    w_process->setWindowFlags(Qt::FramelessWindowHint);
+    QPoint tpoint = ui->showimg->mapToGlobal(QPoint(ui->showimg->width()/2-65,ui->showimg->height()/2-65));
+    w_process->setGeometry(tpoint.x(),tpoint.y(),130,130);
+    w_process->setFixedWidth(130);
+    w_process->setFixedHeight(130);
+
+    connect(this,SIGNAL(s_denoise_close()),w_process,SLOT(r_denoise_close()));
+    connect(w_process,SIGNAL(s_denoise_close_ok()),this,SLOT(r_denoise_close_ok()));
+
+    QtConcurrent::run(this,&MainWindow::denoise_methods,2,2);
+
+    w_process->exec();
+}
+
+void MainWindow::on_RTV_mid_triggered()
+{
+    ui->back->setEnabled(true);
+
+    w_process=new processing();
+    w_process->setWindowFlags(Qt::FramelessWindowHint);
+    QPoint tpoint = ui->showimg->mapToGlobal(QPoint(ui->showimg->width()/2-65,ui->showimg->height()/2-65));
+    w_process->setGeometry(tpoint.x(),tpoint.y(),130,130);
+    w_process->setFixedWidth(130);
+    w_process->setFixedHeight(130);
+
+    connect(this,SIGNAL(s_denoise_close()),w_process,SLOT(r_denoise_close()));
+    connect(w_process,SIGNAL(s_denoise_close_ok()),this,SLOT(r_denoise_close_ok()));
+
+    QtConcurrent::run(this,&MainWindow::denoise_methods,2,1);
+
+    w_process->exec();
+}
+
+void MainWindow::on_RTV_weak_triggered()
+{
+    ui->back->setEnabled(true);
+
+    w_process=new processing();
+    w_process->setWindowFlags(Qt::FramelessWindowHint);
+    QPoint tpoint = ui->showimg->mapToGlobal(QPoint(ui->showimg->width()/2-65,ui->showimg->height()/2-65));
+    w_process->setGeometry(tpoint.x(),tpoint.y(),130,130);
+    w_process->setFixedWidth(130);
+    w_process->setFixedHeight(130);
+
+    connect(this,SIGNAL(s_denoise_close()),w_process,SLOT(r_denoise_close()));
+    connect(w_process,SIGNAL(s_denoise_close_ok()),this,SLOT(r_denoise_close_ok()));
+
+    QtConcurrent::run(this,&MainWindow::denoise_methods,2,0);
+
+    w_process->exec();
 
 
+}
 
 
 
@@ -2069,6 +2925,19 @@ void MainWindow::on_scan_triggered()
 //        refresh_dataset();
 //    }
 //}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

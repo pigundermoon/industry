@@ -21,7 +21,7 @@ static Mat src;
 static Mat map_img;
 static Mat tmap_img;
 static cv::Mat dst;
-static cv::Mat res;
+static cv::Mat_<unsigned char> res;
 static Mat log_img;
 static Mat img;
 static double minv, maxv;
@@ -249,7 +249,17 @@ void ui_local_hdr::on_v2_sliderReleased()
 
 void ui_local_hdr::on_ok_button_clicked()
 {
-
+    QString opt = "$7:"+QString::number(value1)+","+QString::number(value2);
+    Mat_<unsigned short> res1 = Mat(res.size(),CV_16UC1);
+    for (int i=0;i<res.rows;i++)
+    {
+        for (int j=0;j<res.cols;j++)
+        {
+            res1(i,j) = res(i,j)*255;
+        }
+    }
+    emit s_ok(res1,opt);
+    this->close();
 }
 void ui_local_hdr::closeEvent(QCloseEvent *)
 {

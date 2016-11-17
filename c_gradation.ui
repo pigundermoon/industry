@@ -16,6 +16,12 @@
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
+  <property name="font">
+   <font>
+    <family>微软雅黑</family>
+    <pointsize>12</pointsize>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
@@ -23,9 +29,9 @@
    <property name="geometry">
     <rect>
      <x>400</x>
-     <y>10</y>
+     <y>20</y>
      <width>77</width>
-     <height>371</height>
+     <height>351</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -62,8 +68,8 @@
       </property>
       <property name="sizeHint" stdset="0">
        <size>
-        <width>20</width>
-        <height>40</height>
+        <width>72</width>
+        <height>366</height>
        </size>
       </property>
      </spacer>
@@ -96,8 +102,8 @@
       <rect>
        <x>10</x>
        <y>10</y>
-       <width>60</width>
-       <height>16</height>
+       <width>71</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="sizePolicy">
@@ -105,6 +111,12 @@
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
      </property>
      <property name="text">
       <string>输入色阶：</string>
@@ -126,7 +138,7 @@
       </sizepolicy>
      </property>
      <property name="text">
-      <string>hist</string>
+      <string/>
      </property>
     </widget>
     <widget class="QWidget" name="widget_4" native="true">
@@ -139,7 +151,10 @@
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout_4">
-      <item row="0" column="2">
+      <property name="bottomMargin">
+       <number>12</number>
+      </property>
+      <item row="0" column="1">
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -152,13 +167,19 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="3">
+      <item row="0" column="2">
        <widget class="QSpinBox" name="input_gray">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
         </property>
         <property name="minimum">
          <number>1</number>
@@ -174,23 +195,7 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QSpinBox" name="input_black">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximum">
-         <number>65533</number>
-        </property>
-        <property name="singleStep">
-         <number>100</number>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="4">
+      <item row="0" column="3">
        <spacer name="horizontalSpacer_4">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -203,13 +208,19 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="5">
+      <item row="0" column="4">
        <widget class="QSpinBox" name="input_white">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
         </property>
         <property name="minimum">
          <number>2</number>
@@ -222,6 +233,28 @@
         </property>
         <property name="value">
          <number>65535</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QSpinBox" name="input_black">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="maximum">
+         <number>65533</number>
+        </property>
+        <property name="singleStep">
+         <number>100</number>
         </property>
        </widget>
       </item>
@@ -409,7 +442,7 @@ border: 0px solid #3A3939;
       <rect>
        <x>10</x>
        <y>10</y>
-       <width>61</width>
+       <width>71</width>
        <height>19</height>
       </rect>
      </property>
@@ -418,6 +451,12 @@ border: 0px solid #3A3939;
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <family>微软雅黑</family>
+       <pointsize>12</pointsize>
+      </font>
      </property>
      <property name="text">
       <string>输出色阶：</string>
@@ -460,6 +499,12 @@ border: 0px solid #3A3939;
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
         <property name="minimum">
          <number>0</number>
         </property>
@@ -494,6 +539,12 @@ border: 0px solid #3A3939;
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
         </property>
         <property name="minimum">
          <number>1</number>

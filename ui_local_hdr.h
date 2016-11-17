@@ -49,7 +49,7 @@ private slots:
 signals:
    void s_imagechar(cv::Mat_<unsigned char>);
    void s_cancel();
-   void s_ok(cv::Mat_<unsigned short>);
+   void s_ok(cv::Mat_<unsigned short>, QString opt);
 protected:
    void closeEvent(QCloseEvent *);
 private:
